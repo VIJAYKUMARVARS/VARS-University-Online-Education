@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Notice Board – VARS LMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --green:#007c63;
+      --green-dark:#00594f;
+      --bg:#f4f6fb;
+      --card-bg:#ffffff;
+      --border:#e1e5ee;
+      --muted:#6b7280;
+      --danger:#e11d48;
+      --warning:#f59e0b;
+      --success:#16a34a;
+      --radius-lg:14px;
+      --shadow-soft:0 10px 30px rgba(15,23,42,0.12);
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background:radial-gradient(circle at top left,#e0fbf4,#f4f6fb);
+      color:#111827;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+    .topbar {
+      background:linear-gradient(120deg,var(--green-dark),#009688);
+      color:#fff;
+      padding:14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      box-shadow:0 4px 15px rgba(0,0,0,0.18);
+      z-index:10;
+    }
+    .topbar-title {
+      font-size:18px;
+      font-weight:600;
+      letter-spacing:0.03em;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .topbar-title span.icon {
+      font-size:22px;
+    }
+    .topbar-user {
+      font-size:13px;
+      text-align:right;
+    }
+        .btn-help{
+      border-radius:999px;
+      border:0;
+      padding:4px 10px;
+      font-size:11px;
+      cursor:pointer;
+      margin-bottom:4px;
+      background:rgba(255,255,255,0.16);
+      color:#ecfdf5;
+    }
+
+.pill-role {
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.14);
+    }
+    .layout {
+      flex:1;
+      display:flex;
+      padding:18px;
+      gap:18px;
+    }
+    @media(max-width:900px){
+      .layout {
+        flex-direction:column;
+        padding:12px;
+      }
+    }
+    .sidebar {
+      width:210px;
+      max-width:100%;
+      background:rgba(255,255,255,0.85);
+      backdrop-filter:blur(14px);
+      border-radius:var(--radius-lg);
+      box-shadow:var(--shadow-soft);
+      padding:14px 14px 16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      border:1px solid rgba(148,163,184,0.25);
+    }
+    .sidebar h2 {
+      font-size:15px;
+      font-weight:600;
+      margin-bottom:4px;
+    }
+    .sidebar p {
+      font-size:12px;
+      color:var(--muted);
+    }
+    .nav-btn {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid transparent;
+      background:#f3f4ff;
+      color:#111827;
+      font-size:13px;
+      text-decoration:none;
+      cursor:pointer;
+    }
+    .nav-btn span.icon { font-size:18px; }
+    .nav-btn:hover {
+      border-color:#c4d1ff;
+      background:#e5ecff;
+    }
+    .nav-meta {
+      margin-top:auto;
+      font-size:11px;
+      color:var(--muted);
+    }
+    .main {
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+    .page-header {
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .page-title {
+      font-size:20px;
+      font-weight:600;
+    }
+    .page-sub {
+      font-size:12px;
+      color:var(--muted);
+      margin-top:2px;
+    }
+    .chip {
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:11px;
+      background:#ecfdf3;
+      color:#166534;
+    }
+    .chip.span-warning { background:#fef6e7; color:#92400e; }
+    .btn {
+      border-radius:999px;
+      border:0;
+      padding:8px 14px;
+      font-size:13px;
+      cursor:pointer;
+      font-weight:500;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      transition:transform 0.05s ease, box-shadow 0.05s ease, background 0.15s ease;
+    }
+    .btn-primary {
+      background:linear-gradient(120deg,#059669,#22c55e);
+      color:#fff;
+      box-shadow:0 8px 18px rgba(16,185,129,0.35);
+    }
+    .btn-ghost {
+      background:transparent;
+      border:1px solid #cbd5f5;
+      color:#374151;
+    }
+    .btn-danger {
+      background:#fee2e2;
+      color:#b91c1c;
+      border:1px solid #fecaca;
+    }
+    .btn:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(15,23,42,0.16); }
+    .btn:active { transform:translateY(0); box-shadow:none; }
+    .cards-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:14px;
+    }
+    .card {
+      background:var(--card-bg);
+      border-radius:var(--radius-lg);
+      box-shadow:var(--shadow-soft);
+      padding:14px 14px 16px;
+      border:1px solid rgba(148,163,184,0.25);
+      position:relative;
+      overflow:hidden;
+    }
+    .card-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .card-title {
+      font-size:15px;
+      font-weight:600;
+    }
+    .card-meta {
+      font-size:11px;
+      color:var(--muted);
+      margin-top:3px;
+    }
+    .tag {
+      font-size:11px;
+      padding:3px 7px;
+      border-radius:999px;
+      background:#eff6ff;
+      color:#1d4ed8;
+    }
+    .field-group {
+      margin-top:8px;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    label {
+      font-size:12px;
+      color:#4b5563;
+    }
+    input[type="text"],
+    input[type="email"],
+    textarea,
+    select {
+      width:100%;
+      font-family:inherit;
+      font-size:13px;
+      padding:7px 9px;
+      border-radius:9px;
+      border:1px solid #cbd5e1;
+      outline:none;
+      background:#f9fafb;
+      transition:border 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+    textarea { min-height:80px; resize:vertical; }
+    input:focus, textarea:focus, select:focus {
+      border-color:#4f46e5;
+      box-shadow:0 0 0 1px rgba(79,70,229,0.35);
+      background:#ffffff;
+    }
+    .muted { color:var(--muted); font-size:12px; }
+    .status-pill {
+      font-size:11px;
+      padding:3px 7px;
+      border-radius:999px;
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+    }
+    .status-open { background:#fee2e2; color:#b91c1c; }
+    .status-progress { background:#fef3c7; color:#92400e; }
+    .status-resolved { background:#dcfce7; color:#166534; }
+    .table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:12px;
+      margin-top:6px;
+    }
+    .table th, .table td {
+      padding:6px 8px;
+      border-bottom:1px solid #e5e7eb;
+      text-align:left;
+      vertical-align:top;
+    }
+    .table th { font-weight:600; color:#4b5563; }
+    .badge-small {
+      font-size:11px;
+      padding:2px 6px;
+      border-radius:999px;
+      background:#eef2ff;
+      color:#4338ca;
+    }
+    .empty-state {
+      padding:20px;
+      text-align:center;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .empty-state span {
+      font-size:30px;
+      display:block;
+      margin-bottom:6px;
+    }
+    .actions-row {
+      margin-top:10px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      justify-content:flex-end;
+    }
+  </style>
+
+<!-- Firebase SDKs (compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCDl6SlZo1kpnce0xMDa81wQ9GdaE5-GE0",
+    authDomain: "vars-lms.firebaseapp.com",
+    projectId: "vars-lms",
+    storageBucket: "vars-lms.firebasestorage.app",
+    messagingSenderId: "703858663216",
+    appId: "1:703858663216:web:bbe6224dd645e1ae1d32f5",
+    measurementId: "G-XQ54JJTL7D"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+</script>
+
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-title">
+      <span class="icon">🎓</span>
+      <span>VARS University · Online LMS</span>
+    </div>
+    <div class="topbar-user">
+      <div id="userName">—</div>
+      <div class="pill-role" id="userRolePill">Role: —</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div>
+        <h2>Notice Board</h2>
+        <p id="pageHint">Loading…</p>
+      </div>
+      <button class="nav-btn" onclick="goDashboard()">
+        <span class="icon">🏠</span>
+        <span>Back to Dashboard</span>
+      </button>
+      <button class="nav-btn" onclick="window.location.reload()">
+        <span class="icon">🔄</span>
+        <span>Refresh</span>
+      </button>
+      <div class="nav-meta">
+        Data is shared with the main LMS using browser storage.
+      </div>
+    </aside>
+
+    <main class="main">
+      
+      <header class="page-header">
+        <div>
+          <div class="page-title">Notice Board</div>
+          <div class="page-sub" id="noticeDescription">
+            University-wide announcements synced with the main LMS.
+          </div>
+        </div>
+        <div>
+          <button class="btn btn-primary" id="btnAddNotice" style="display:none;">
+            📢 Publish Notice
+          </button>
+        </div>
+      </header>
+
+      <section id="noticeFormArea" style="display:none;margin-top:12px;">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title" id="noticeFormTitle">New Notice</div>
+              <div class="card-meta">Notices are visible to all users immediately after publishing.</div>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Notice Title</label>
+            <input type="text" id="noticeTitleInput" placeholder="e.g. Mid-term Exam Schedule" />
+          </div>
+          <div class="field-group">
+            <label>Details</label>
+            <textarea id="noticeBodyInput" placeholder="Full details, dates, links, etc."></textarea>
+          </div>
+          <div class="actions-row">
+            <button class="btn btn-primary" onclick="saveNotice()">📢 Publish</button>
+            <button class="btn btn-ghost" onclick="cancelNoticeEdit()">Cancel</button>
+          </div>
+        </div>
+      </section>
+
+      <section style="margin-top:14px;">
+        <div id="noticeList" class="cards-grid"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    const USERS_KEY='vars_users',
+          EVENTS_KEY='vars_events',
+          QUIZ_KEY='vars_quizzes',
+          SUB_KEY='vars_submissions',
+          TEXTS_KEY='vars_texts',
+          NOTICES_KEY='vars_notices',
+          PROGRAMS_KEY='vars_programs',
+          SUPPORT_KEY='vars_support_tickets';
+
+    function load(key, defVal) {
+      try {
+        const raw = localStorage.getItem(key);
+        if(!raw) return defVal;
+        return JSON.parse(raw);
+      } catch(e) {
+        console.error('load error', key, e);
+        return defVal;
+      }
+    }
+    function save(key, val) {
+      localStorage.setItem(key, JSON.stringify(val));
+    }
+
+    function goDashboard(){
+      // adjust file name if your main LMS file name is different
+      window.location.href = 'Final_LMS_DashboardFixed_Full.html';
+    }
+
+    function ensureUserContext(){
+      const raw = sessionStorage.getItem('user');
+      if(!raw){
+        goDashboard();
+        return null;
+      }
+      try {
+        const u = JSON.parse(raw);
+        document.getElementById('userName').textContent = u.name + ' (' + u.email + ')';
+        const pill = document.getElementById('userRolePill');
+        pill.textContent = 'Role: ' + u.role;
+        return u;
+      } catch(e){
+        console.error('user parse fail', e);
+        goDashboard();
+        return null;
+      }
+    }
+
+    const currentUser = ensureUserContext();
+    if(!currentUser) {
+      // redirected
+    }
+
+    
+let editingNoticeId = null;
+
+function canManageNotices(){
+  if(!currentUser) return false;
+  return currentUser.role === 'Admin' || currentUser.role === 'SubAdmin';
+}
+
+function renderNotices(){
+  const wrapper = document.getElementById('noticeList');
+  const notices = load(NOTICES_KEY, []);
+  if(notices.length === 0){
+    wrapper.innerHTML = '<div class="card empty-state"><span>📭</span>No notices published yet.' +
+      (canManageNotices() ? '<br/>Use “Publish Notice” to post one.' : '') +
+      '</div>';
+    return;
+  }
+  wrapper.innerHTML = notices
+    .slice()
+    .sort((a,b)=> (new Date(b.createdAt||0)) - (new Date(a.createdAt||0)))
+    .map(n => {
+      const meta = 'By ' + (n.createdBy || '—') + (n.createdAt ? (' · ' + n.createdAt) : '');
+      let manageHtml = '';
+      if(canManageNotices()){
+        manageHtml = `
+          <div class="actions-row">
+            <button class="btn btn-ghost" onclick="editNotice('${n.id}')">✏️ Edit</button>
+            <button class="btn btn-danger" onclick="deleteNotice('${n.id}')">🗑 Delete</button>
+          </div>`;
+      }
+      return `
+        <article class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">${escapeHtml(n.title || 'Untitled Notice')}</div>
+              <div class="card-meta">${escapeHtml(meta)}</div>
+            </div>
+            <div class="tag">Notice</div>
+          </div>
+          <div class="field-group" style="margin-top:8px;">
+            <div class="muted">${escapeHtml(n.body || 'No details provided.')}</div>
+          </div>
+          ${manageHtml}
+        </article>`;
+    }).join('');
+}
+
+function openNoticeForm(isEdit){
+  document.getElementById('noticeFormArea').style.display = 'block';
+  document.getElementById('noticeFormTitle').textContent = isEdit ? 'Edit Notice' : 'New Notice';
+}
+
+function cancelNoticeEdit(){
+  editingNoticeId = null;
+  document.getElementById('noticeTitleInput').value = '';
+  document.getElementById('noticeBodyInput').value = '';
+  document.getElementById('noticeFormArea').style.display = 'none';
+}
+
+function saveNotice(){
+  if(!canManageNotices()){ alert('Only Admin/SubAdmin can publish notices.'); return; }
+  const title = document.getElementById('noticeTitleInput').value.trim();
+  const body = document.getElementById('noticeBodyInput').value.trim();
+  if(!title){
+    alert('Title is required.');
+    return;
+  }
+  let notices = load(NOTICES_KEY, []);
+  if(editingNoticeId){
+    notices = notices.map(n => {
+      if(n.id === editingNoticeId){
+        return Object.assign({}, n, { title, body });
+      }
+      return n;
+    });
+  } else {
+    const id = 'n_' + Math.random().toString(36).slice(2,9);
+    const now = new Date().toLocaleString();
+    notices.unshift({ id, title, body, createdBy: currentUser.email, createdAt: now });
+  }
+  save(NOTICES_KEY, notices);
+  cancelNoticeEdit();
+  renderNotices();
+}
+
+function editNotice(id){
+  if(!canManageNotices()) return;
+  const notices = load(NOTICES_KEY, []);
+  const n = notices.find(x => x.id === id);
+  if(!n) return;
+  editingNoticeId = id;
+  document.getElementById('noticeTitleInput').value = n.title || '';
+  document.getElementById('noticeBodyInput').value = n.body || '';
+  openNoticeForm(true);
+}
+
+function deleteNotice(id){
+  if(!canManageNotices()) return;
+  if(!confirm('Delete this notice?')) return;
+  let notices = load(NOTICES_KEY, []);
+  notices = notices.filter(n => n.id !== id);
+  save(NOTICES_KEY, notices);
+  renderNotices();
+}
+
+function escapeHtml(s){
+  if(s === undefined || s === null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+(function initNoticePage(){
+  if(!currentUser) return;
+  const desc = document.getElementById('noticeDescription');
+  const hint = document.getElementById('pageHint');
+  if(canManageNotices()){
+    document.getElementById('btnAddNotice').style.display = 'inline-flex';
+    document.getElementById('btnAddNotice').onclick = () => {
+      editingNoticeId = null;
+      document.getElementById('noticeTitleInput').value = '';
+      document.getElementById('noticeBodyInput').value = '';
+      openNoticeForm(false);
+    };
+    desc.textContent = 'Create and manage official announcements. Changes sync with the LMS notice board.';
+    hint.textContent = 'You can publish, edit and delete notices.';
+  } else {
+    desc.textContent = 'Read all official university announcements in one place.';
+    hint.textContent = 'Read-only access. Editing is restricted to Admin/SubAdmin.';
+  }
+  renderNotices();
+})();
+  </script>
+
+<button onclick="window.location.href='support.html'" 
+        style="position:fixed; right:16px; bottom:16px; 
+        width:48px; height:48px; border-radius:50%; 
+        font-size:22px; background:#009688; color:#fff; 
+        border:none; box-shadow:0 6px 20px rgba(0,0,0,0.3);
+        cursor:pointer; z-index:9999;">?</button>
+
+<script>
+document.addEventListener("contextmenu",function(e){e.preventDefault();});
+document.addEventListener("keydown",function(e){
+  if(e.key==="F12"){ e.preventDefault(); }
+  if(e.ctrlKey && e.shiftKey && ["I","C","J"].includes(e.key.toUpperCase())){ e.preventDefault(); }
+  if(e.ctrlKey && e.key.toLowerCase()==="u"){ e.preventDefault(); }
+});
+setInterval(function(){ debugger; },2000);
+</script>
+
+</body>
+</html>

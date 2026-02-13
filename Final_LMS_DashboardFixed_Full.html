@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VARS UNIVERSITY Online Education — Final (Admin/SubAdmin)</title>
+<!-- jsPDF for client-side PDF downloads -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--green:#007c63;--dark:#00695c;--muted:#f5f8fa}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:var(--muted);color:#222}
+.centered-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,0.08);overflow:hidden}
+.auth-wrapper{width:100%;max-width:980px;display:flex;gap:20px;padding:28px}
+.auth-left{flex:1;padding:18px;text-align:center}
+.auth-left img{max-width:160px}
+.auth-left h1{color:var(--dark);margin:.6rem 0 6px}
+.auth-left p.badge{display:inline-block;background:var(--dark);color:#fff;padding:6px 10px;border-radius:6px;font-weight:600}
+.auth-right{flex:1;padding:18px}
+.form{display:flex;flex-direction:column;gap:10px}
+input,select,button,textarea{font-family:inherit;font-size:14px}
+.link-forgot{
+  margin-top:4px;
+  padding:0;
+  border:0;
+  background:none;
+  color:var(--dark);
+  font-size:12px;
+  text-decoration:underline;
+  cursor:pointer;
+  align-self:flex-start;
+}
+
+input,select,textarea{padding:10px;border:1px solid #d9dfe6;border-radius:6px}
+label{font-size:13px}
+.small{font-size:13px;color:#666}
+.btn{background:var(--green);color:#fff;padding:10px 12px;border:0;border-radius:8px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
+.muted{color:#666}
+.auth-toggle{display:flex;gap:8px;margin-bottom:6px}
+#dashboard{display:none;height:100vh}
+.app-grid{display:flex;height:100%}
+
+/* Sidebar - collapsed by default */
+.sidebar{width:72px;background:linear-gradient(180deg,var(--dark),#00594f);color:#fff;padding:22px 8px; display:flex;flex-direction:column;gap:8px;transition:width .3s;overflow:hidden;white-space:nowrap}
+.sidebar:hover{width:260px;}
+.sidebar h2{margin:0 0 6px;text-align:center;font-size:18px;transition:opacity .3s}
+.sidebar:not(:hover) h2{opacity:0}
+.nav-link{padding:10px 12px;border-radius:8px;color:#fff;text-decoration:none; display:flex;align-items:center;gap:10px}
+.nav-link:hover{background:rgba(255,255,255,0.06)}
+.nav-link span{transition:opacity .3s}
+.sidebar:not(:hover) .nav-link span{opacity:0}
+
+/* Main */
+.main{flex:1;padding:18px;overflow:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.cards{display:flex;gap:12px;margin-bottom:14px}
+.card-mini{flex:1;padding:16px;border-radius:10px;background:var(--green);color:#fff;text-align:center}
+
+/* Calendar + Right panel — larger calendar and right panel fixed width */
+.calendar-wrap{display:flex;align-items:flex-start;gap:12px}
+.left-area{flex:1;min-width:0}
+.calendar{background:#fff;border-radius:10px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.04);width:100%}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;position:relative}
+.cal-header .btn{font-size:15px;padding:8px 14px;font-weight:600}
+#prevMonth{position:absolute;left:0}
+#nextMonth{position:absolute;right:0}
+#monthTitle{text-align:center;width:100%;font-size:18px;font-weight:700}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-day-title{text-align:center;padding:8px;font-weight:700;background:var(--muted);border-radius:6px}
+.cal-cell{min-height:86px;padding:8px;background:#fbfdff;border-radius:8px;position:relative;border:1px solid #eef3f6;cursor:pointer}
+.cal-cell.out{opacity:0.35}
+.cal-date{position:absolute;top:8px;right:8px;font-size:12px;color:#666}
+.cal-cell.today{box-shadow:inset 0 0 0 2px rgba(0,124,99,0.12);border:1px solid var(--green)}
+.event-item{font-size:13px;padding:6px;border-radius:6px;background:linear-gradient(90deg,#eaf7f1,#f2fff8); border-left:4px solid var(--green);margin-top:4px;cursor:pointer}
+
+/* Right panel fixed width */
+.right-panel{width:320px;background:#fff;border-radius:10px;padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.04);min-height:100%}
+.right-panel h3{margin-top:0;color:var(--dark)}
+.right-panel ul{list-style:none;padding:0;margin:0}
+.right-panel li{padding:10px;border-bottom:1px solid #eef3f6;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.right-panel li:hover{background:#f6fbf9}
+.right-panel li.locked{opacity:0.6}
+
+/* The dynamic info area that will replace calendar when an item is opened — sits in left-area */
+.info-content{display:none;background:#fff;border-radius:10px;padding:18px;box-shadow:0 4px 12px rgba(0,0,0,0.04);width:100%}
+.info-content.active{display:block}
+
+/* minimal table/styles */
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:8px;border-bottom:1px solid #eef3f6;text-align:left}
+.badge-small{background:#f1f6f5;border-radius:6px;padding:6px;font-weight:600;color:#333;font-size:13px}
+.correct{background:#e6ffef;border-left:4px solid #00a86b;padding:6px;border-radius:6px}
+.wrong{background:#fff3f3;border-left:4px solid #ff6b6b;padding:6px;border-radius:6px}
+
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45); display:flex;align-items:center;justify-content:center;z-index:9999}
+.modal{background:#fff;padding:18px;border-radius:10px;min-width:320px;max-width:900px;box-shadow:0 10px 40px rgba(0,0,0,0.2);overflow:auto;max-height:90vh}
+
+/* Responsive */
+@media (max-width:980px){
+  .auth-wrapper{flex-direction:column}
+  .calendar{width:100%}
+  .calendar-wrap{flex-direction:column}
+  .sidebar{display:none}
+  .right-panel{width:100%}
+  .info-content{width:100%}
+  .right-panel{order:2}
+  .left-area{order:1}
+}
+</style>
+
+<!-- Firebase SDKs (compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCDl6SlZo1kpnce0xMDa81wQ9GdaE5-GE0",
+    authDomain: "vars-lms.firebaseapp.com",
+    projectId: "vars-lms",
+    storageBucket: "vars-lms.firebasestorage.app",
+    messagingSenderId: "703858663216",
+    appId: "1:703858663216:web:bbe6224dd645e1ae1d32f5",
+    measurementId: "G-XQ54JJTL7D"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+</script>
+
+</head>
+<body>
+<!-- AUTH -->
+<div id="auth" class="centered-wrap">
+  <div class="card auth-wrapper">
+    <div class="auth-left">
+      <img src="logo.png" alt="VARS logo" />
+      <h1>VARS UNIVERSITY</h1>
+      <p class="badge">ACCREDITED WITH A+ GRADE BY NAAC</p>
+      <!-- LMS Description -->
+<p style="
+  font-size:16px;
+  font-weight:500;
+  color:#1f3f3a;
+  margin-top:20px;
+  margin-bottom:6px;
+">
+  Welcome to the official Learning Management System
+</p>
+
+<!-- Divider -->
+<div style="
+  width:60px;
+  height:3px;
+  background:#0b7a63;
+  border-radius:4px;
+  margin:10px 0 14px 0;
+"></div>
+
+<!-- LMS Body Text -->
+<p style="
+  font-size:14.5px;
+  line-height:1.75;
+  color:#4f4f4f;
+  max-width:420px;
+">
+  of <strong>VARS University</strong>.<br>
+  A secure, scalable, and integrated online learning platform designed to support
+  course management, assessment systems, and university communication
+  through a centralized digital infrastructure.
+</p>
+<p style="
+  font-size:12.5px;
+  color:#7a7a7a;
+  margin-top:10px;
+">
+  Secure login • Authorized university users only
+</p>
+<p style="
+  font-size:13px;
+  color:#5f6f6c;
+  margin-top:6px;
+  letter-spacing:0.3px;
+">
+  Digital Academic Platform
+</p>
+<div style="
+  margin-top:22px;
+  padding-left:2px;
+">
+</div>
+
+    </div>
+    <div class="auth-right">
+      
+
+      <form id="loginForm" class="form" onsubmit="return false">
+        <div id="loginMessage"
+     style="display:none;
+            margin-bottom:10px;
+            padding:10px;
+            border-radius:6px;
+            font-size:14px;">
+</div>
+
+        <label>Email</label><input id="loginEmail" type="email" required />
+        <label>Password</label><input id="loginPassword" type="password" required />
+        <button type="button" class="link-forgot" onclick="handleForgotPassword()">Forgot password?</button>
+        <label>Role</label>
+        <select id="loginRole" required>
+          <option value="">Select Role</option>
+          <option value="Student">Student</option>
+          <option value="Faculty">Faculty</option>
+          <option value="SubAdmin">SubAdmin</option>
+          <option value="Admin">Admin</option>
+        </select>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="loginCaptchaInput" placeholder="Enter CAPTCHA" style="flex:1" />
+          <div id="loginCaptcha" style="padding:8px;background:#f1f6f5;border-radius:6px;border:1px solid #e3efea">?</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn" onclick="handleLogin()">Login</button>
+          <div id="loginMessage"
+     style="
+       display:none;
+       padding:10px;
+       border-radius:8px;
+       font-size:14px;
+       font-weight:600;
+       text-align:center;
+     ">
+</div>
+
+        </div>
+      </form>
+
+      <form id="signupForm" class="form" style="display:none" onsubmit="return false">
+        <label>Name</label><input id="signupName" required />
+        <label>Email</label><input id="signupEmail" type="email" required />
+        <label>Password</label><input id="signupPassword" type="password" minlength="6" required />
+        <label>Role</label>
+        <select id="signupRole" required>
+          <option value="">Select Role</option>
+          <option value="Student">Student</option>
+          <option value="Faculty">Faculty</option>
+          <option value="SubAdmin">SubAdmin</option>
+          <option value="Admin">Admin</option>
+        </select>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="signupCaptchaInput" placeholder="Enter CAPTCHA" style="flex:1" />
+          <div id="signupCaptcha" style="padding:8px;background:#f1f6f5;border-radius:6px;border:1px solid #e3efea">?</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="btn" onclick="handleSignup()">Create</button>
+          <button class="btn ghost" type="button" onclick="clearDemoData()">Reset</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="app-grid">
+    <aside class="sidebar">
+  <h2>VARS Online</h2>
+  <a class="nav-link" href="#" onclick="showSection('overview')">🏠 <span>Dashboard</span></a>
+  <a class="nav-link" href="programs.html">🎓 <span>My Programs</span></a>
+  <a class="nav-link" href="examination.html">📝 <span>Examination</span></a>
+  <a class="nav-link" href="notice.html">📢 <span>Notice Board</span></a>
+  <a class="nav-link" href="support.html">💬 <span>Support</span></a>
+  <div style="flex:1"></div>
+  <a class="nav-link" href="#" onclick="logout()">🚪 <span>Logout</span></a>
+</aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="user">Welcome <span id="userFullName"></span> — <span id="userRole"></span></div>
+        <div class="controls" id="adminControls" style="display:none">
+
+  <!-- Add User -->
+        <button class="btn ghost" onclick="openAdminSignup()">Add User</button>
+
+  <!-- Manage Users (Add User ke bagal me) -->
+        <button class="btn ghost" onclick="openManageUsers()">Manage Users</button>
+
+         <button class="btn ghost" onclick="openManageNoticesModal()">Manage Notices</button>
+         <button class="btn ghost" onclick="openManageProgramsModal()">Manage Programs</button>
+         <button class="btn ghost" onclick="openManageEventsModal()">Manage Events</button>
+
+        <button class="btn" onclick="logout()">Logout</button>
+        </div>
+
+
+        <div class="controls" id="subAdminControls" style="display:none">
+          <button class="btn ghost" onclick="openManageNoticesModal()">Notices</button>
+          <button class="btn ghost" onclick="openManageProgramsModal()">Programs</button>
+          <button class="btn ghost" onclick="openManageEventsModal()">Events</button>
+          <button class="btn" onclick="logout()">Logout</button>
+        </div>
+        <div class="controls" id="facultyControls" style="display:none">
+          <button class="btn ghost" onclick="openAddEventModal()">Add Calendar Event</button>
+          <button class="btn" onclick="logout()">Logout</button>
+        </div>
+        <div class="controls" id="studentControls" style="display:none">
+          <button class="btn" onclick="logout()">Logout</button>
+        </div>
+      </div>
+
+      <div id="overview" class="section">
+  <div class="cards" style="display:flex; gap:20px; flex-wrap:wrap;">
+    
+    <div class="card-mini" style="width:120px; height:100px; display:flex; justify-content:center; align-items:center; border-radius:10px; cursor:pointer; background-color:#009688;">
+      <a href="#" onclick="window.location.href='programs.html'"
+        style="text-decoration:none; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:18px; height:100%; width:100%;">
+        <span style="font-size:30px;">🎓</span>
+        <span>My Program</span>
+      </a>
+    </div>
+
+    <div class="card-mini" style="width:120px; height:100px; display:flex; justify-content:center; align-items:center; border-radius:10px; cursor:pointer; background-color:#009688;">
+      <a href="#" onclick="showSection('exam')" style="text-decoration:none; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:18px; height:100%; width:100%;">
+        <span style="font-size:30px;">📊</span>
+        <span>Course Progress</span>
+      </a>
+    </div>
+
+    <div class="card-mini" style="width:120px; height:100px; display:flex; justify-content:center; align-items:center; border-radius:10px; cursor:pointer; background-color:#009688;">
+      <a href="#" onclick="showSection('notice')" style="text-decoration:none; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:18px; height:100%; width:100%;">
+        <span style="font-size:30px;">📢</span>
+        <span>Notice Board</span>
+      </a>
+    </div>
+
+  </div>
+
+  <div id="quickInfoSection" style="margin-top:18px">
+    <h3>Quick Info</h3>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <div style="background:#fff;padding:12px;border-radius:8px;min-width:160px">
+        <strong>Total Users</strong>
+        <div id="statUsers">-</div>
+      </div>
+      <div style="background:#fff;padding:12px;border-radius:8px;min-width:160px">
+        <strong>Total Programs</strong>
+        <div id="statPrograms">-</div>
+      </div>
+      <div style="background:#fff;padding:12px;border-radius:8px;min-width:160px">
+        <strong>Upcoming Events</strong>
+        <div id="statEvents">-</div>
+      </div>
+      <div style="background:#fff;padding:12px;border-radius:8px;min-width:160px">
+        <strong>Active Notices</strong>
+        <div id="statNotices">-</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+        <!-- calendar + right panel -->
+        <div class="calendar-wrap" id="calendarWrap">
+          <div class="left-area" id="leftArea">
+            <div class="calendar card" id="calendarArea">
+              <div class="cal-header">
+                <button class="btn ghost" id="prevMonth">◀ Prev</button>
+                <div id="monthTitle"></div>
+                <button class="btn ghost" id="nextMonth">Next ▶</button>
+                <div class="small muted" style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%)">
+                  Today: <span id="todayLabel"></span>
+                </div>
+              </div>
+              <div class="cal-grid" id="calTitles"></div>
+              <div class="cal-grid" id="calGrid"></div>
+            </div>
+
+            <div id="infoContent" class="info-content" aria-hidden="true"></div>
+          </div>
+
+          <div class="right-panel" id="rightPanel">
+            <h3>Reports & Info</h3>
+            <ul>
+              <li onclick="openInfo('Assessments', this)">📚 Assessments</li>
+              <li onclick="openInfo('Formative & Quiz Reports', this)">🧾 Formative & Quiz Reports</li>
+              <li onclick="openInfo('Students Corner', this)">🎓 Students Corner</li>
+              <li onclick="openInfo('Program Objective / Outcome', this)">🎯 Program Objective / Outcome</li>
+              <li onclick="openInfo('Course Syllabus', this)">📘 Course Syllabus</li>
+              <li onclick="openInfo('Academic Calendar', this)">📅 Academic Calendar</li>
+              <li onclick="openInfo('Overall Attendance Report', this)">📊 Overall Attendance Report</li>
+              <li onclick="openInfo('Informative Videos & FAQs', this)">🎥 Informative Videos & FAQs</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="programs" class="section" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h2>Programs</h2>
+          <div id="programControls"></div>
+        </div>
+        <div id="programListArea"></div>
+      </div>
+
+      <div id="exam" class="section" style="display:none">Examination section</div>
+
+      <div id="notice" class="section" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h2>Notice Board</h2>
+          <div id="noticeControls"></div>
+        </div>
+        <div id="noticeListArea"></div>
+      </div>
+
+      <div id="support" class="section" style="display:none">Support section</div>
+
+      <div id="reports" class="section" style="display:none">
+        <h2>Reports & Analytics (Admin)</h2>
+        <div id="reportsArea"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modalBackdrop" style="display:none" class="modal-backdrop" aria-hidden="true">
+  <div class="modal" id="modalContent" role="dialog" aria-modal="true"></div>
+</div>
+
+<script>
+/* ---- storage keys & helpers ---- */
+const USERS_KEY='vars_users',EVENTS_KEY='vars_events',QUIZ_KEY='vars_quizzes',SUB_KEY='vars_submissions',TEXTS_KEY='vars_texts',NOTICES_KEY='vars_notices',PROGRAMS_KEY='vars_programs';
+function qs(id){return document.getElementById(id);}
+function loadUsers(){return JSON.parse(localStorage.getItem(USERS_KEY)||'{}')}
+function saveUsers(o){localStorage.setItem(USERS_KEY,JSON.stringify(o))}
+function loadEvents(){return JSON.parse(localStorage.getItem(EVENTS_KEY)||'[]')}
+function saveEvents(a){localStorage.setItem(EVENTS_KEY,JSON.stringify(a))}
+function loadQuizzes(){return JSON.parse(localStorage.getItem(QUIZ_KEY)||'[]')}
+function saveQuizzes(a){localStorage.setItem(QUIZ_KEY,JSON.stringify(a))}
+function loadSubs(){return JSON.parse(localStorage.getItem(SUB_KEY)||'[]')}
+function saveSubs(a){localStorage.setItem(SUB_KEY,JSON.stringify(a))}
+function loadTexts(){return JSON.parse(localStorage.getItem(TEXTS_KEY)||'{}')}
+function saveTexts(o){localStorage.setItem(TEXTS_KEY,JSON.stringify(o))}
+function loadNotices(){return JSON.parse(localStorage.getItem(NOTICES_KEY)||'[]')}
+function saveNotices(a){localStorage.setItem(NOTICES_KEY,JSON.stringify(a))}
+function loadPrograms(){return JSON.parse(localStorage.getItem(PROGRAMS_KEY)||'[]')}
+function savePrograms(a){localStorage.setItem(PROGRAMS_KEY,JSON.stringify(a))}
+
+/* --- demo users --- */
+function ensureDemo(){
+  const u = loadUsers();
+  if(!u['demo@student.com']){
+    u['demo@student.com']={name:'Demo Student',email:'demo@student.com',pass:'student123',role:'Student'};
+    u['demo@faculty.com']={name:'Demo Faculty',email:'demo@faculty.com',pass:'faculty123',role:'Faculty'};
+    u['admin@vars.com']={name:'Site Admin',email:'admin@vars.com',pass:'admin123',role:'Admin'};
+    u['subadmin@vars.com']={name:'Sub Admin',email:'subadmin@vars.com',pass:'sub123',role:'SubAdmin'};
+    saveUsers(u);
+  }
+}
+ensureDemo();
+
+/* --- demo content generation if empty --- */
+function ensureDemoContent(){
+  if(loadEvents().length===0){
+    const evs = [
+      {id: uid('ev'), title:'Orientation', desc:'Orientation for new batch', createdBy:'admin@vars.com', date: todayISO(), startDate: todayISO(), startTime:'10:00', endDate: todayISO(), endTime:'12:00', createdAt:(new Date()).toLocaleString()},
+      {id: uid('ev'), title:'Guest Lecture: Web Dev', desc:'Open for all', createdBy:'demo@faculty.com', date: nextDateISO(3), startDate: nextDateISO(3), startTime:'14:00', endDate: nextDateISO(3), endTime:'16:00', createdAt:(new Date()).toLocaleString()}
+    ];
+    saveEvents(evs);
+  }
+  if(loadNotices().length===0){
+    const ns = [
+      {id: uid('n'), title:'Holiday Notice', body:'University closed on 25th', createdBy:'admin@vars.com', createdAt:(new Date()).toLocaleString()},
+      {id: uid('n'), title:'Result Declared', body:'Semester results published', createdBy:'subadmin@vars.com', createdAt:(new Date()).toLocaleString()}
+    ];
+    saveNotices(ns);
+  }
+  if(loadPrograms().length===0){
+    const ps = [
+      {id: uid('p'), title:'B.Sc Computer Science', desc:'3-year program', createdBy:'admin@vars.com', createdAt:(new Date()).toLocaleString()},
+      {id: uid('p'), title:'BBA', desc:'3-year program', createdBy:'subadmin@vars.com', createdAt:(new Date()).toLocaleString()}
+    ];
+    savePrograms(ps);
+  }
+}
+ensureDemoContent();
+
+/* --- simple CAPTCHA --- */
+function genCaptcha(){ let a=Math.floor(Math.random()*9)+1, b=Math.floor(Math.random()*9)+1; return {label:`${a}+${b}=?`, val:a+b}; }
+function refresh(){ let l1=genCaptcha(), l2=genCaptcha(); qs('loginCaptcha').innerText=l1.label; qs('loginCaptcha').dataset.val=l1.val; qs('signupCaptcha').innerText=l2.label; qs('signupCaptcha').dataset.val=l2.val; }
+refresh();
+
+
+/* --- signup/login --- */
+
+async function handleSignup(){
+  const n = qs('signupName').value.trim();
+  const e = qs('signupEmail').value.trim().toLowerCase();
+  const p = qs('signupPassword').value;
+  const r = qs('signupRole').value;
+  const c = qs('signupCaptchaInput').value;
+  const ex = qs('signupCaptcha').dataset.val;
+
+  if(!n || !e || !p || !r){
+    alert('Fill all fields');
+    return;
+  }
+  if(String(c) !== String(ex)){
+    alert('Wrong captcha');
+    refresh();
+    return;
+  }
+
+  try{
+    const cred = await auth.createUserWithEmailAndPassword(e, p);
+    await db.collection('users').doc(cred.user.uid).set({
+      name: n,
+      email: e,
+      role: r,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert('Account created! Use Login.');
+    qs('showLogin').click();
+  }catch(err){
+    console.error(err);
+    alert('Signup error: ' + err.message);
+  }
+}
+
+
+async function handleLogin(){
+  const e = qs('loginEmail').value.trim().toLowerCase();
+  const p = qs('loginPassword').value;
+  const r = qs('loginRole').value;
+  const c = qs('loginCaptchaInput').value;
+  const ex = qs('loginCaptcha').dataset.val;
+
+  if(String(c) !== String(ex)){
+    alert('Wrong captcha');
+    return;
+  }
+function showLoginMessage(text, type="success"){
+  const box = document.getElementById("loginMessage");
+  if(!box) return;
+
+  box.innerText = text;
+  box.style.display = "block";
+
+  if(type === "success"){
+    box.style.background = "#e6ffef";
+    box.style.color = "#00695c";
+    box.style.border = "1px solid #00a86b";
+  }else{
+    box.style.background = "#fff3f3";
+    box.style.color = "#c62828";
+    box.style.border = "1px solid #ef5350";
+  }
+}
+
+  
+
+async function handleForgotPassword(){
+  const e = qs('loginEmail').value.trim().toLowerCase();
+  if(!e){
+    alert('Please enter your registered email in the Email field first, then click Forgot password again.');
+    return;
+  }
+  try{
+    await auth.sendPasswordResetEmail(e);
+    alert('Password reset link has been sent to ' + e + '. Please check your inbox.');
+  }catch(err){
+    console.error(err);
+    alert('Error while sending reset email: ' + err.message);
+  }
+}
+try{
+    const cred = await auth.signInWithEmailAndPassword(e, p);
+    const uid = cred.user.uid;
+    const doc = await db.collection('users').doc(uid).get();
+    if(!doc.exists){
+      alert('User profile missing. Contact admin.');
+      return;
+    }
+    const u = doc.data();
+if(u.role !== r){
+  showLoginMessage('Wrong role selected ❌', 'error');
+  return;
+}
+
+sessionStorage.setItem('user', JSON.stringify(u));
+
+showLoginMessage('Login successful ✅ Redirecting...', 'success');
+
+setTimeout(() => {
+  initDashboard(u);
+}, 1200);
+
+}catch(err){
+  console.error(err);
+  showLoginMessage('Login error: ' + err.message, 'error');
+}
+}
+
+
+function prefillTest(){ qs('loginEmail').value='admin@vars.com'; qs('loginPassword').value='admin123'; qs('loginRole').value='Admin'; }
+function clearDemoData(){ if(!confirm('Reset demo data and users?')) return; localStorage.removeItem(USERS_KEY); localStorage.removeItem(EVENTS_KEY); localStorage.removeItem(QUIZ_KEY); localStorage.removeItem(SUB_KEY); localStorage.removeItem(TEXTS_KEY); localStorage.removeItem(NOTICES_KEY); localStorage.removeItem(PROGRAMS_KEY); ensureDemo(); ensureDemoContent(); alert('Demo reset'); location.reload(); }
+function logout(){
+  // clear session
+  sessionStorage.removeItem('user');
+
+  // hide dashboard
+  const dashboard = document.getElementById('dashboard');
+  if (dashboard) dashboard.style.display = 'none';
+
+  // show login/auth screen
+  const authBox = document.getElementById('auth');
+  if (authBox) authBox.style.display = 'flex';
+
+  // clear old message (important)
+  const msg = document.getElementById('loginMessage');
+  if (msg) {
+    msg.innerText = '';
+    msg.style.display = 'none';
+  }
+
+  // show logout success message
+  setTimeout(() => {
+    showLoginMessage('Logged out successfully 👋', 'success');
+  }, 100);
+}
+
+
+/* --- view switching --- */
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+  qs(id).style.display='block';
+  if(id==='overview'){
+    qs('leftArea').style.display='block';
+    qs('calendarArea').style.display='block';
+    qs('infoContent').classList.remove('active');
+    qs('infoContent').style.display='none';
+    qs('infoContent').innerHTML='';
+  }
+  if(id==='programs') renderPrograms();
+  if(id==='notice') renderNotices();
+  if(id==='reports') renderReports();
+}
+
+/* --- dashboard init --- */
+function initDashboard(u){
+  qs('auth').style.display='none';
+  qs('dashboard').style.display='block';
+  qs('userFullName').innerText=u.name;
+  qs('userRole').innerText=u.role;
+  window.currentUser = u;
+
+  // role-specific UI toggles
+  qs('adminControls').style.display = (u.role==='Admin') ? 'flex' : 'none';
+  qs('subAdminControls').style.display = (u.role==='SubAdmin') ? 'flex' : 'none';
+  qs('facultyControls').style.display = (u.role==='Faculty') ? 'flex' : 'none';
+  qs('studentControls').style.display = (u.role==='Student') ? 'flex' : 'none';
+
+  // show reports link only to admin
+  
+
+  // show notice/program add buttons for Admin & SubAdmin
+  const noticeControls = qs('noticeControls');
+  noticeControls.innerHTML = '';
+  if(u.role==='Admin' || u.role==='SubAdmin'){
+    noticeControls.innerHTML = '<button class="btn" onclick="openAddNoticeModal()">Add Notice</button>';
+  }
+  const progControls = qs('programControls');
+  progControls.innerHTML = '';
+  if(u.role==='Admin' || u.role==='SubAdmin'){
+    progControls.innerHTML = '<button class="btn" onclick="openAddProgramModal()">Add Program</button>';
+  }
+
+
+  // hide Quick Info for students
+  const qi = document.getElementById('quickInfoSection');
+  if(qi){
+    qi.style.display = (u.role === 'Student') ? 'none' : 'block';
+  }
+
+  renderCalendar();
+  updateStats();
+}
+
+/* --- calendar --- */
+let today=new Date(), currentMonth=today.getMonth(), currentYear=today.getFullYear();
+const months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+function renderCalendar(){
+  qs('calTitles').innerHTML = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class='cal-day-title'>${d}</div>`).join('');
+  let first = new Date(currentYear, currentMonth, 1).getDay();
+  let days = new Date(currentYear, currentMonth+1, 0).getDate();
+  let prevDays = new Date(currentYear, currentMonth, 0).getDate();
+  let cells = [];
+  for(let x = first-1; x >= 0; x--) cells.push({num: prevDays - x, out: true});
+  for(let i=1;i<=days;i++) cells.push({num: i, out: false});
+  let remain = 42 - cells.length;
+  for(let i=1;i<=remain;i++) cells.push({num: i, out: true});
+
+  let html='';
+  const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+  cells.forEach((c, idx)=>{
+    let cellYear = currentYear;
+    let cellMonth = currentMonth + 1;
+    let cellDay = c.num;
+    if(c.out){
+      if(idx < firstDayIndex){
+        let pm = new Date(currentYear, currentMonth, 0);
+        cellYear = pm.getFullYear(); cellMonth = pm.getMonth()+1; cellDay = c.num;
+      } else {
+        let nm = new Date(currentYear, currentMonth+1, 1);
+        cellYear = nm.getFullYear(); cellMonth = nm.getMonth()+1; cellDay = c.num;
+      }
+    }
+    const mStr = String(cellMonth).padStart(2,'0');
+    const dStr = String(cellDay).padStart(2,'0');
+    const dateStr = `${cellYear}-${mStr}-${dStr}`;
+    const isToday = (!c.out && c.num === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear());
+    html += `<div class="cal-cell ${c.out?'out':''} ${isToday?'today':''}" data-date="${dateStr}">
+               <div class="cal-date">${c.num}</div>
+               <div class="events-container" data-date="${dateStr}"></div>
+             </div>`;
+  });
+  qs('calGrid').innerHTML = html;
+  qs('monthTitle').innerText = `${months[currentMonth]} ${currentYear}`;
+  qs('todayLabel').innerText = `${today.toDateString()}`;
+
+  // render events into cells and attach listeners
+  attachEventsToCells();
+}
+
+function attachEventsToCells(){
+  // clear previous
+  document.querySelectorAll('.events-container').forEach(ec => ec.innerHTML = '');
+  const events = loadEvents();
+  events.forEach(e => {
+    const containers = document.querySelectorAll(`.events-container[data-date="${e.date}"]`);
+    containers.forEach(container=>{
+      const div = document.createElement('div');
+      div.className = 'event-item';
+      div.tabIndex = 0;
+      div.textContent = e.title || '(No title)';
+      div.dataset.eventId = e.id;
+      div.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        openEventDetailModal(e.id);
+      });
+      div.addEventListener('keypress', function(k){
+        if(k.key === 'Enter' || k.key === ' ') openEventDetailModal(e.id);
+      });
+      container.appendChild(div);
+    });
+  });
+
+  // attach click on cell (outside events) to show date-level listing
+  document.querySelectorAll('.cal-cell').forEach(cell=>{
+    const newCell = cell.cloneNode(true);
+    cell.parentNode.replaceChild(newCell, cell);
+  });
+  document.querySelectorAll('.cal-cell').forEach(cell=>{
+    const date = cell.getAttribute('data-date');
+    cell.addEventListener('click', function(){
+      cellClick(date);
+    });
+  });
+}
+
+qs('prevMonth').onclick = ()=>{ currentMonth--; if(currentMonth<0){ currentMonth=11; currentYear--; } renderCalendar(); };
+qs('nextMonth').onclick = ()=>{ currentMonth++; if(currentMonth>11){ currentMonth=0; currentYear++; } renderCalendar(); };
+
+function cellClick(dateStr){
+  const events = loadEvents().filter(e=>e.date===dateStr);
+  if(events.length === 0){
+    showModal(`<h3>${dateStr}</h3><p>No events.</p><div style="text-align:right;margin-top:8px"><button class="btn" onclick="closeModal()">Close</button></div>`);
+  } else {
+    let listHtml = '';
+    events.forEach(ev=>{
+      let controlsHtml = '';
+      if(window.currentUser && (window.currentUser.role === 'Faculty' || window.currentUser.role==='Admin' || window.currentUser.role==='SubAdmin')){
+        controlsHtml = `<div style="display:flex;gap:8px;justify-content:flex-end">
+                          <button class="btn" data-action="edit" data-id="${ev.id}">Edit</button>
+                          <button class="btn ghost" data-action="delete" data-id="${ev.id}">Delete</button>
+                        </div>`;
+      }
+      const joinBtn = `<div style="margin-top:8px;text-align:right"><button class="btn" data-action="join" data-id="${ev.id}">Join Session</button></div>`;
+      listHtml += `<div style="padding:8px;border-bottom:1px solid #eef3f6" data-ev-id="${ev.id}">
+        <strong>${esc(ev.title)}</strong>
+        <div class="muted">${ev.date} • ${ev.startTime || ''} - ${ev.endTime || ''}</div>
+        <p>${esc(ev.desc||'')}</p>
+        <div class="muted">Created By: ${esc(ev.createdBy)}</div>
+        ${joinBtn}
+        <div style="text-align:right">${controlsHtml}</div>
+      </div>`;
+    });
+
+    const html = `<h3>Events — ${dateStr}</h3>${listHtml}<div style="text-align:right;margin-top:8px"><button class="btn" onclick="closeModal()">Close</button></div>`;
+    showModal(html);
+
+    const modal = qs('modalContent');
+    modal.querySelectorAll('button[data-action]').forEach(btn=>{
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      btn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        if(action === 'edit') {
+          openEditFormInModal(id);
+        } else if(action === 'delete') {
+          if(confirm('Delete this event?')) {
+            deleteEvent(id);
+          }
+        } else if(action === 'join') {
+          joinSession(id);
+        }
+      });
+    });
+  }
+}
+
+/* Open a modal showing single event details (used by clicking the event item) */
+function openEventDetailModal(evId){
+  const ev = loadEvents().find(x=>x.id===evId);
+  if(!ev) return alert('Event not found');
+  let controlsHtml = '';
+  if(window.currentUser && (window.currentUser.role === 'Faculty' || window.currentUser.role==='Admin' || window.currentUser.role==='SubAdmin')){
+    controlsHtml = `<div style="display:flex;gap:8px;justify-content:flex-end">
+                      <button class="btn" id="modalEditBtn">Edit</button>
+                      <button class="btn ghost" id="modalDeleteBtn">Delete</button>
+                    </div>`;
+  }
+  const joinBtn = `<div style="margin-top:8px;text-align:right"><button class="btn" id="modalJoinBtn">Join Session</button></div>`;
+  const html = `<h3>${esc(ev.title)}</h3>
+    <div class="muted">${ev.date} • ${ev.startTime || ''} - ${ev.endTime || ''}</div>
+    <p>${esc(ev.desc||'')}</p>
+    <div class="muted">Created By: ${esc(ev.createdBy)}</div>
+    ${joinBtn}
+    <div style="margin-top:12px;text-align:right">${controlsHtml}</div>
+    <div style="text-align:right;margin-top:8px"><button class="btn ghost" onclick="closeModal()">Close</button></div>`;
+  showModal(html);
+
+  const editBtn = qs('modalEditBtn');
+  const delBtn = qs('modalDeleteBtn');
+  const joinBtnEl = qs('modalJoinBtn');
+
+  if(editBtn) editBtn.addEventListener('click', function(e){ e.stopPropagation(); openEditFormInModal(evId); });
+  if(delBtn) delBtn.addEventListener('click', function(e){ e.stopPropagation(); if(confirm('Delete this event?')) deleteEvent(evId); });
+  if(joinBtnEl) joinBtnEl.addEventListener('click', function(e){ e.stopPropagation(); joinSession(evId); });
+}
+
+/* Add / Edit / Delete events with full fields (title, desc, createdBy, start date/time, end date/time) */
+function openAddEventModal(editId){
+  if(!window.currentUser) return alert('Please login to add events');
+  // permit Faculty/Admin/SubAdmin to add events
+  if(!(window.currentUser.role === 'Faculty' || window.currentUser.role==='Admin' || window.currentUser.role==='SubAdmin')) return alert('Only Faculty/Admin/SubAdmin can add events');
+  if(editId){
+    const ev = loadEvents().find(x=>x.id===editId);
+    if(!ev) return alert('Event not found');
+    const html = `<h3>Edit Event</h3>
+      <label>Title :</label><input id='evtTitle' value="${esc(ev.title)}" />
+      <label>Description :</label><textarea id='evtDesc'>${esc(ev.desc||'')}</textarea>
+      <label>Created By :</label><input id='evtCreatedBy' value="${esc(ev.createdBy)}" />
+      <label>Start Date :</label><input type='date' id='evtStartDate' value="${ev.startDate||ev.date}" />
+      <label>Start Time :</label><input type='time' id='evtStartTime' value="${ev.startTime||''}" />
+      <label>End Date :</label><input type='date' id='evtEndDate' value="${ev.endDate||ev.date}" />
+      <label>End Time :</label><input type='time' id='evtEndTime' value="${ev.endTime||''}" />
+      <div style='display:flex;gap:8px;margin-top:10px'>
+        <button class='btn' id='saveEditBtn'>Save</button>
+        <button class='btn ghost' onclick='closeModal()'>Cancel</button>
+      </div>`;
+    showModal(html);
+    qs('saveEditBtn').addEventListener('click', function(){ saveEvent(editId); });
+  } else {
+    const html = `<h3>Add Event</h3>
+      <label>Title :</label><input id='evtTitle' />
+      <label>Description :</label><textarea id='evtDesc'></textarea>
+      <label>Created By :</label><input id='evtCreatedBy' value="${esc(window.currentUser.email)}" />
+      <label>Start Date :</label><input type='date' id='evtStartDate' />
+      <label>Start Time :</label><input type='time' id='evtStartTime' />
+      <label>End Date :</label><input type='date' id='evtEndDate' />
+      <label>End Time :</label><input type='time' id='evtEndTime' />
+      <div style='display:flex;gap:8px;margin-top:10px'>
+        <button class='btn' id='saveNewBtn'>Save</button>
+        <button class='btn ghost' onclick='closeModal()'>Cancel</button>
+      </div>`;
+    showModal(html);
+    qs('saveNewBtn').addEventListener('click', function(){ saveEvent(); });
+  }
+}
+
+/* Save (create or update) */
+function saveEvent(editId){
+  const title = qs('evtTitle').value.trim();
+  const desc = qs('evtDesc').value.trim();
+  const createdBy = qs('evtCreatedBy').value.trim() || (window.currentUser && window.currentUser.email);
+  const startDate = qs('evtStartDate').value;
+  const startTime = qs('evtStartTime').value;
+  const endDate = qs('evtEndDate').value;
+  const endTime = qs('evtEndTime').value;
+  if(!title || !startDate) return alert('Please fill Title and Start Date at minimum');
+  const list = loadEvents();
+  if(editId){
+    const idx = list.findIndex(x=>x.id===editId);
+    if(idx>=0){
+      list[idx].title = title; list[idx].desc = desc; list[idx].createdBy = createdBy;
+      list[idx].startDate = startDate; list[idx].startTime = startTime; list[idx].endDate = endDate; list[idx].endTime = endTime;
+      list[idx].date = startDate;
+      saveEvents(list);
+      closeModal(); renderCalendar(); updateStats(); return;
+    }
+  } else {
+    const ev = {id: uid('ev'), title, desc, createdBy, startDate, startTime, endDate, endTime, date: startDate, createdAt: (new Date()).toLocaleString()};
+    list.push(ev);
+    saveEvents(list);
+    closeModal();
+    renderCalendar();
+    updateStats();
+  }
+}
+
+/* Delete */
+function deleteEvent(id){
+  let list = loadEvents();
+  list = list.filter(e=>e.id!==id);
+  saveEvents(list);
+  closeModal();
+  renderCalendar();
+  updateStats();
+}
+
+/* Join session: demo behavior */
+function joinSession(id){
+  const ev = loadEvents().find(e=>e.id===id);
+  if(!ev) return alert('Event not found');
+  const start = ev.startDate ? `${ev.startDate} ${ev.startTime||''}`.trim() : ev.date;
+  const end = ev.endDate ? `${ev.endDate} ${ev.endTime||''}`.trim() : '';
+  const msg = `Joining session:\n${ev.title}\n${start}${end?(' to '+end):''}\nCreated by: ${ev.createdBy}\n\n(This is a demo — replace with actual meeting link behavior.)`;
+  alert(msg);
+}
+
+/* modal helpers */
+function showModal(html){
+  qs('modalContent').innerHTML = html;
+  qs('modalBackdrop').style.display = 'flex';
+  qs('modalBackdrop').setAttribute('aria-hidden', 'false');
+}
+function closeModal(){ qs('modalBackdrop').style.display = 'none'; qs('modalBackdrop').setAttribute('aria-hidden', 'true'); qs('modalContent').innerHTML = ''; }
+
+/* ---- text escape ---- */
+function esc(s){ if(s===undefined||s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"\\'"); }
+
+/* --- IDs & dates --- */
+function uid(pr='id'){ return pr + '_' + Math.random().toString(36).slice(2,9); }
+function todayISO(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function nextDateISO(days){ const d=new Date(); d.setDate(d.getDate()+days); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+/* ----- Open Info (handles all sections) ----- */
+function openInfo(key, el){
+  let content = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                   <h2 style="margin:0">${esc(key)}</h2>
+                   <div><button class="btn ghost" onclick="closeInfo()">Back</button></div>
+                 </div>`;
+
+  if(key === 'Assessments'){
+    content += `<p class="small muted">Assessments area (Faculty-only in demo).</p>`;
+  }
+  else if(key === 'Formative & Quiz Reports'){
+    content += `<p class="small muted">Create or attempt quizzes. Students: if you have submitted a quiz, 'View' will show your result; otherwise you'll see 'Attempt'.</p>`;
+    if(window.currentUser && window.currentUser.role === 'Faculty'){
+      content += `<div style="margin-bottom:12px"><button class="btn" onclick="showCreateQuiz()">Create New Quiz</button></div>`;
+    }
+    const quizzes = loadQuizzes();
+    if(quizzes.length === 0){
+      content += `<p>No quizzes yet.</p>`;
+    } else {
+      content += `<div id="quizList">` + quizzes.map(q=>{
+        const hasSubmitted = window.currentUser && window.currentUser.role==='Student' && loadSubs().some(s=>s.quizId===q.id && s.studentEmail===window.currentUser.email);
+        let actionBtn = '';
+        if(window.currentUser && window.currentUser.role === 'Student'){
+          actionBtn = hasSubmitted ? `<button class="btn" onclick="showResultModal('${q.id}')">View</button>` : `<button class="btn" onclick="attemptQuiz('${q.id}')">Attempt</button>`;
+        } else {
+          actionBtn = `<button class="btn" onclick="viewQuiz('${q.id}')">View</button>`;
+        }
+        const submissionsCount = loadSubs().filter(s=>s.quizId===q.id).length;
+        const facultyControls = (window.currentUser && window.currentUser.role==='Faculty') ? `<button class="btn ghost" onclick="editQuiz('${q.id}')">Edit</button><button class="btn ghost" onclick="deleteQuizConfirm('${q.id}')">Delete</button>` : '';
+        return `<div style="padding:10px;border:1px solid #eef3f6;border-radius:8px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+          <div><strong>${esc(q.title)}</strong><div class="muted">Questions: ${q.questions.length} • Created: ${q.createdAt} • Submissions: ${submissionsCount}</div></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            ${actionBtn}
+            ${facultyControls}
+            ${window.currentUser && window.currentUser.role==='Faculty' ? `<button class="btn" onclick="viewSubmissions('${q.id}')">Submissions</button>` : ''}
+          </div>
+        </div>`;
+      }).join('') + `</div>`;
+    }
+  }
+  else if(key === 'Students Corner'){
+    content += `<p class="small muted">Student resources & quick links</p><ul><li><a href="#" onclick="return false">Profile</a></li><li><a href="#" onclick="return false">Assignments</a></li></ul>`;
+  }
+  else if(key === 'Program Objective / Outcome'){
+    content += `<p class="small muted">Program outcomes (sample)</p><ol><li>Understand core concepts</li><li>Apply techniques to projects</li></ol>`;
+  }
+  else if(key === 'Course Syllabus'){
+    content += `<p class="small muted">Faculty provide syllabus text. Students can view & download as PDF. Faculty can edit.</p>`;
+    const texts = loadTexts();
+    const syllabus = texts.syllabus || {content:'', updatedAt:'', updatedBy:''};
+    if(window.currentUser && window.currentUser.role === 'Faculty'){
+      content += `<div style="margin-bottom:12px">
+        <label>Enter / Update Syllabus (plain text, HTML allowed):</label>
+        <textarea id="syllabusInput" style="width:100%;min-height:140px">${syllabus.content || ''}</textarea>
+        <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" onclick="saveText('syllabus')">Save</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>
+      </div>`;
+    }
+    if(!syllabus.content){
+      content += `<p>No syllabus provided yet.</p>`;
+    } else {
+      content += `<div style="padding:10px;border:1px solid #eef3f6;border-radius:8px">
+        <div class="muted">Updated: ${syllabus.updatedAt} by ${esc(syllabus.updatedBy)}</div>
+        <div style="margin-top:8px">${syllabus.content.replace(/\n/g,'<br>')}</div>
+        <div style="margin-top:8px;text-align:right"><button class="btn" onclick="downloadTextAsPDF('syllabus')">Download as PDF</button></div>
+      </div>`;
+    }
+  }
+  else if(key === 'Academic Calendar'){
+    content += `<p class="small muted">Faculty provide academic calendar text. Students can view & download as PDF.</p>`;
+    const texts = loadTexts();
+    const calendar = texts.calendar || {content:'', updatedAt:'', updatedBy:''};
+    if(window.currentUser && window.currentUser.role === 'Faculty'){
+      content += `<div style="margin-bottom:12px">
+        <label>Enter / Update Academic Calendar (plain text):</label>
+        <textarea id="calendarInput" style="width:100%;min-height:140px">${calendar.content || ''}</textarea>
+        <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" onclick="saveText('calendar')">Save</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>
+      </div>`;
+    }
+    if(!calendar.content){
+      content += `<p>No academic calendar provided yet.</p>`;
+    } else {
+      content += `<div style="padding:10px;border:1px solid #eef3f6;border-radius:8px">
+        <div class="muted">Updated: ${calendar.updatedAt} by ${esc(calendar.updatedBy)}</div>
+        <div style="margin-top:8px">${calendar.content.replace(/\n/g,'<br>')}</div>
+        <div style="margin-top:8px;text-align:right"><button class="btn" onclick="downloadTextAsPDF('calendar')">Download as PDF</button></div>
+      </div>`;
+    }
+  }
+  else if(key === 'Overall Attendance Report'){
+    content += `<p class="small muted">Attendance summary</p><div style="padding:10px;border-radius:8px;border:1px solid #eef3f6"><strong>Average Attendance:</strong> 89%</div>`;
+  }
+  else if(key === 'Informative Videos & FAQs'){
+    content += `<p class="small muted">Videos & FAQs</p><ul><li>How to join a class</li></ul>`;
+  }
+  else {
+    content += `<p>No preview available.</p>`;
+  }
+
+  qs('calendarArea').style.display = 'none';
+  const info = qs('infoContent');
+  info.innerHTML = content;
+  info.style.display = 'block';
+  info.classList.add('active');
+  info.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* close info */
+function closeInfo(){
+  qs('infoContent').classList.remove('active');
+  qs('infoContent').style.display = 'none';
+  qs('infoContent').innerHTML = '';
+  qs('calendarArea').style.display = 'block';
+}
+
+/* ----- Save text (syllabus/calendar) ----- */
+function saveText(kind){
+  if(!window.currentUser || window.currentUser.role !== 'Faculty') return alert('Only Faculty can save');
+  const texts = loadTexts();
+  if(kind==='syllabus'){
+    const val = qs('syllabusInput').value.trim();
+    texts.syllabus = {content: val, updatedAt: (new Date()).toLocaleString(), updatedBy: window.currentUser.email};
+  } else {
+    const val = qs('calendarInput').value.trim();
+    texts.calendar = {content: val, updatedAt: (new Date()).toLocaleString(), updatedBy: window.currentUser.email};
+  }
+  saveTexts(texts);
+  alert('Saved');
+  openInfo(kind==='syllabus' ? 'Course Syllabus' : 'Academic Calendar', document.querySelector(`#rightPanel li[onclick*="${kind==='syllabus'?'Course Syllabus':'Academic Calendar'}"]`) || {});
+}
+
+/* ----- download text as PDF using jsPDF ----- */
+async function downloadTextAsPDF(kind){
+  const { jsPDF } = window.jspdf;
+  const texts = loadTexts();
+  const obj = texts[kind];
+  if(!obj || !obj.content) return alert('No content to download');
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const title = kind==='syllabus' ? 'Course Syllabus' : 'Academic Calendar';
+  doc.setFontSize(14);
+  doc.text(title, 40, 50);
+  doc.setFontSize(11);
+  const lines = doc.splitTextToSize(obj.content, 520);
+  doc.text(lines, 40, 80);
+  const filename = `${title.replace(/\s+/g,'_')}_${(new Date()).toISOString().slice(0,10)}.pdf`;
+  doc.save(filename);
+}
+
+/* ----- QUIZ Creation / Edit / Delete / Attempt / Results ----- */
+/* (kept from original - unchanged) */
+function showCreateQuiz(editId){
+  if(!window.currentUser || window.currentUser.role!=='Faculty') return alert('Only Faculty');
+  const quizzes = loadQuizzes();
+  const editQuiz = editId ? quizzes.find(q=>q.id===editId) : null;
+  const html = `<h3>${editQuiz? 'Edit Quiz' : 'Create Quiz'}</h3>
+    <label>Title</label><input id="newQuizTitle" value="${editQuiz?esc(editQuiz.title):''}" />
+    <div id="questionsArea" style="margin-top:10px"></div>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <button class="btn" onclick="addQuestionForm()">Add Question</button>
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="saveQuiz('${editId||''}')">Save Quiz</button>
+    </div>
+    <small class="muted">Each question needs at least 2 options and one correct option.</small>`;
+  showModal(html);
+  setTimeout(()=>{
+    if(editQuiz){
+      for(const q of editQuiz.questions) addQuestionFormPrefill(q);
+    } else addQuestionForm();
+  },40);
+}
+function addQuestionFormPrefill(qObj){
+  const area = qs('questionsArea');
+  const qid = uid('q');
+  const div = document.createElement('div');
+  div.style.border='1px solid #eef3f6'; div.style.padding='8px'; div.style.marginBottom='8px';
+  div.id = qid;
+  div.innerHTML = `<label>Question</label><input class="qtext" value="${esc(qObj.q)}" />
+    <div style="margin-top:6px"><strong>Options</strong></div><div class="opts"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn ghost" type="button" onclick="addOption('${qid}')">Add Option</button>
+      <button class="btn ghost" type="button" onclick="removeQ('${qid}')">Remove Question</button>
+    </div>`;
+  area.appendChild(div);
+  qObj.options.forEach((op, idx)=> addOption(qid, op, idx === qObj.correctIndex));
+}
+function addQuestionForm(){
+  const area = qs('questionsArea');
+  const qid = uid('q');
+  const div = document.createElement('div');
+  div.style.border='1px solid #eef3f6'; div.style.padding='8px'; div.style.marginBottom='8px';
+  div.id = qid;
+  div.innerHTML = `<label>Question</label><input class="qtext" />
+    <div style="margin-top:6px"><strong>Options</strong></div><div class="opts"></div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn ghost" type="button" onclick="addOption('${qid}')">Add Option</button>
+      <button class="btn ghost" type="button" onclick="removeQ('${qid}')">Remove Question</button>
+    </div>`;
+  area.appendChild(div);
+  addOption(qid); addOption(qid);
+}
+function addOption(qid, text='', markCorrect=false){
+  const qDiv = qs(qid);
+  if(!qDiv) return;
+  const opts = qDiv.querySelector('.opts');
+  const idx = opts.children.length;
+  const optDiv = document.createElement('div');
+  optDiv.style.display='flex'; optDiv.style.gap='8px'; optDiv.style.alignItems='center'; optDiv.style.marginTop='6px';
+  optDiv.innerHTML = `<input class="opttext" placeholder="Option text" value="${esc(text)}" />
+    <label style="font-size:13px"><input type="radio" name="correct_${qid}" value="${idx}" ${markCorrect? 'checked' : ''} /> Correct</label>
+    <button class="btn ghost" type="button" onclick="removeOption(this)">Remove</button>`;
+  opts.appendChild(optDiv);
+}
+function removeOption(btn){ btn.closest('div').remove(); }
+function removeQ(qid){ qs(qid).remove(); }
+function saveQuiz(editId){
+  const title = qs('newQuizTitle').value.trim();
+  if(!title) return alert('Quiz title required');
+  const qEl = qs('questionsArea'); const qnodes = Array.from(qEl.children); const questions = [];
+  for(const qn of qnodes){
+    const qtext = qn.querySelector('.qtext').value.trim();
+    const opts = Array.from(qn.querySelectorAll('.opttext')).map(o=>o.value.trim()).filter(x=>x!=='');
+    if(!qtext) return alert('Every question must have text');
+    if(opts.length < 2) return alert('Each question needs at least 2 options');
+    const radios = qn.querySelectorAll(`input[type="radio"][name^="correct_"]`);
+    let correctIndex = -1;
+    for(const r of radios){ if(r.checked) { correctIndex = parseInt(r.value); break; } }
+    if(correctIndex < 0 || correctIndex >= opts.length) return alert('Select correct option for each question');
+    questions.push({q: qtext, options: opts, correctIndex});
+  }
+  const quizzes = loadQuizzes();
+  if(editId){
+    const idx = quizzes.findIndex(x=>x.id===editId);
+    if(idx>=0){ quizzes[idx].title = title; quizzes[idx].questions = questions; quizzes[idx].updatedAt = (new Date()).toLocaleString(); saveQuizzes(quizzes); closeModal(); openInfo('Formative & Quiz Reports', document.querySelector('#rightPanel li[onclick*="Formative & Quiz Reports"]') || {}); return; }
+    else return alert('Quiz to edit not found');
+  }
+  const newQ = {id: uid('quiz'), title, questions, createdBy: window.currentUser.email, createdAt: (new Date()).toLocaleString()};
+  quizzes.unshift(newQ); saveQuizzes(quizzes); closeModal(); openInfo('Formative & Quiz Reports', document.querySelector('#rightPanel li[onclick*="Formative & Quiz Reports"]') || {});
+}
+function editQuiz(quizId){ const q = loadQuizzes().find(x=>x.id===quizId); if(!q) return alert('Quiz not found'); showCreateQuiz(quizId); }
+function deleteQuizConfirm(id){ if(!window.currentUser || window.currentUser.role!=='Faculty') return alert('Only Faculty can delete quizzes'); if(confirm('Delete this quiz? This will remove all associated submissions.')) deleteQuiz(id); }
+function deleteQuiz(id){ let qsList = loadQuizzes(); qsList = qsList.filter(q=>q.id!==id); saveQuizzes(qsList); let subs = loadSubs(); subs = subs.filter(s=>s.quizId!==id); saveSubs(subs); openInfo('Formative & Quiz Reports', document.querySelector('#rightPanel li[onclick*="Formative & Quiz Reports"]') || {}); }
+function attemptQuiz(quizId){
+  const quiz = loadQuizzes().find(q=>q.id===quizId); if(!quiz) return alert('Quiz not found');
+  let html = `<h3>Attempt: ${esc(quiz.title)}</h3><form id="attemptForm">`;
+  quiz.questions.forEach((qq, i)=>{
+    html += `<div style="margin-bottom:10px;padding:8px;border:1px solid #eef3f6;border-radius:8px"><div><strong>Q${i+1}:</strong> ${esc(qq.q)}</div><div style="margin-top:6px">`;
+    qq.options.forEach((op, j)=>{ const letter = String.fromCharCode(65 + j); html += `<div><label><input type="radio" name="q_${i}" value="${j}" /> ${letter}. ${esc(op)}</label></div>`; });
+    html += `</div></div>`;
+  });
+  html += `</form><div style="display:flex;gap:8px"><button class="btn" onclick="submitAttempt('${quiz.id}')">Submit</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`;
+  showModal(html);
+}
+function submitAttempt(quizId){
+  const quiz = loadQuizzes().find(q=>q.id===quizId); if(!quiz) return alert('Quiz not found');
+  const form = qs('attemptForm'); const answers = [];
+  for(let i=0;i<quiz.questions.length;i++){ const sel = form.querySelector(`input[name="q_${i}"]:checked`); answers.push(sel ? parseInt(sel.value) : null); }
+  let correctCount = 0; quiz.questions.forEach((qq, i)=>{ if(answers[i] !== null && answers[i] === qq.correctIndex) correctCount++; });
+  const score = Math.round((correctCount / quiz.questions.length) * 100);
+  const subs = loadSubs(); subs.push({id: uid('sub'), quizId, studentEmail: window.currentUser.email, studentName: window.currentUser.name || '', answers, score, correctCount, totalQuestions: quiz.questions.length, timestamp: (new Date()).toLocaleString()}); saveSubs(subs); closeModal(); openInfo('Formative & Quiz Reports', document.querySelector('#rightPanel li[onclick*="Formative & Quiz Reports"]') || {}); showResultModal(quizId);
+}
+function showResultModal(quizId){
+  const quiz = loadQuizzes().find(q=>q.id===quizId); if(!quiz) return;
+  const subsAll = loadSubs().filter(s=>s.quizId===quizId && s.studentEmail===window.currentUser.email); if(subsAll.length===0) return alert('No submission found');
+  const sub = subsAll.slice(-1)[0]; const totalMarks = sub.totalQuestions; const obtained = sub.correctCount; const pass = (obtained/totalMarks) >= 0.4 ? 'Pass' : 'Fail';
+  let html = `<h3>Assignment Result</h3><div style="margin-bottom:8px"><strong>Student Name :</strong><br>${esc(sub.studentName || window.currentUser.name || '')}</div><div style="margin-bottom:8px"><strong>Student email :</strong><br>${esc(sub.studentEmail)}</div><div style="margin-bottom:8px"><strong>Result :</strong> ${pass}</div><div style="margin-bottom:8px"><strong>Obtain Marks :</strong> ${obtained}</div><div style="margin-bottom:8px"><strong>Total Marks :</strong> ${totalMarks}</div><hr />`;
+  quiz.questions.forEach((qq, i)=>{ const pts = 1; const correctIndex = qq.correctIndex; const correctText = qq.options[correctIndex]; const sel = sub.answers[i]; const selText = (sel===null || sel===undefined) ? '<em>No answer</em>' : qq.options[sel]; const pointObt = (sel===correctIndex) ? pts : 0; html += `<div style="margin-top:10px"><div><strong>Q.${i+1}. ${esc(qq.q)}</strong></div><div style="margin-top:6px"><em>Points- ${pts}</em></div><div style="margin-top:6px">`; qq.options.forEach((op, j)=>{ html += `<div>${j+1}. ${esc(op)}</div>`; }); html += `</div><div style="margin-top:6px"><strong>Correct Option:</strong> ${correctIndex+1}</div><div style="margin-top:6px"><strong>Selected answer:</strong> ${esc(selText)}</div><div style="margin-top:6px"><strong>Point Obtained :</strong> ${pointObt}</div></div><hr />`; });
+  html += `<div style="text-align:right;margin-top:8px"><button class="btn" onclick="closeModal()">Close</button></div>`; showModal(html);
+}
+function viewSubmissions(quizId){
+  if(!window.currentUser || window.currentUser.role!=='Faculty') return alert('Only Faculty');
+  const quiz = loadQuizzes().find(q=>q.id===quizId); if(!quiz) return;
+  const subs = loadSubs().filter(s=>s.quizId===quizId);
+  let html = `<h3>Submissions — ${esc(quiz.title)}</h3><div class="muted">Total submissions: ${subs.length}</div>`;
+  if(subs.length===0) html += `<p style="margin-top:8px">No submissions yet.</p>`;
+  else { html += `<table class="table" style="margin-top:8px"><thead><tr><th>Student</th><th>Score</th><th>Details</th></tr></thead><tbody>`;
+    subs.forEach(s=>{ html += `<tr><td>${esc(s.studentName||s.studentEmail)}</td><td>${s.score}% (${s.correctCount}/${s.totalQuestions})</td><td><button class="btn ghost" onclick="showSubmissionModal('${s.id}')">View</button></td></tr>`; });
+    html += `</tbody></table>`; }
+  html += `<div style="margin-top:12px;text-align:right"><button class="btn" onclick="closeInfo()">Close</button></div>`;
+  const info = qs('infoContent'); info.innerHTML = html; info.style.display='block'; info.classList.add('active'); info.scrollIntoView({behavior:'smooth'});
+}
+function showSubmissionModal(subId){
+  const sub = loadSubs().find(s=>s.id===subId); if(!sub) return alert('Submission not found');
+  const quiz = loadQuizzes().find(q=>q.id===sub.quizId); if(!quiz) return;
+  const totalMarks = sub.totalQuestions; const obtained = sub.correctCount; const pass = (obtained/totalMarks) >= 0.4 ? 'Pass' : 'Fail';
+  let html = `<h3>Assignment Result</h3><div style="margin-bottom:8px"><strong>Student Name :</strong><br>${esc(sub.studentName || '')}</div><div style="margin-bottom:8px"><strong>Student email :</strong><br>${esc(sub.studentEmail)}</div><div style="margin-bottom:8px"><strong>Result :</strong> ${pass}</div><div style="margin-bottom:8px"><strong>Obtain Marks :</strong> ${obtained}</div><div style="margin-bottom:8px"><strong>Total Marks :</strong> ${totalMarks}</div><hr />`;
+  quiz.questions.forEach((qq, i)=>{ const pts = 1; const correctIndex = qq.correctIndex; const sel = sub.answers[i]; const selText = (sel===null || sel===undefined) ? '<em>No answer</em>' : qq.options[sel]; const pointObt = (sel===correctIndex) ? pts : 0; html += `<div style="margin-top:10px"><div><strong>Q.${i+1}. ${esc(qq.q)}</strong></div><div style="margin-top:6px"><em>Points- ${pts}</em></div><div style="margin-top:6px">`; qq.options.forEach((op, j)=>{ html += `<div>${j+1}. ${esc(op)}</div>`; }); html += `</div><div style="margin-top:6px"><strong>Correct Option:</strong> ${correctIndex+1}</div><div style="margin-top:6px"><strong>Selected answer:</strong> ${esc(selText)}</div><div style="margin-top:6px"><strong>Point Obtained :</strong> ${pointObt}</div></div><hr />`; });
+  html += `<div style="text-align:right;margin-top:8px"><button class="btn" onclick="closeModal()">Close</button></div>`; showModal(html);
+}
+function viewQuiz(quizId){ const quiz = loadQuizzes().find(q=>q.id===quizId); if(!quiz) return alert('Quiz not found'); let html = `<h3>Quiz: ${esc(quiz.title)}</h3><div class="muted">Created: ${quiz.createdAt} by ${esc(quiz.createdBy)} ${quiz.updatedAt? '<br>Updated: '+esc(quiz.updatedAt):''}</div>`; quiz.questions.forEach((qq,i)=>{ html += `<div style="margin-top:8px;padding:8px;border:1px solid #eef3f6;border-radius:8px"><div><strong>Q${i+1}:</strong> ${esc(qq.q)}</div><div style="margin-top:6px">`; qq.options.forEach((op,j)=>{ const isCorrect = (j===qq.correctIndex); const letter = String.fromCharCode(65+j); html += `<div>${letter}. ${esc(op)} ${isCorrect ? '<span class="badge-small">Correct</span>' : ''}</div>`; }); html += `</div></div>`; }); html += `<div style="margin-top:12px;text-align:right"><button class="btn" onclick="closeInfo()">Close</button></div>`; const info = qs('infoContent'); info.innerHTML = html; info.style.display='block'; info.classList.add('active'); info.scrollIntoView({behavior:'smooth'}); }
+
+/* ---- NOTICE BOARD Management (Admin/SubAdmin) ---- */
+function renderNotices(){
+  const notices = loadNotices();
+  const listHtml = notices.map(n=>{
+    let controls = '';
+    if(window.currentUser && (window.currentUser.role==='Admin' || window.currentUser.role==='SubAdmin')){
+      controls = `<div style="margin-top:8px;text-align:right"><button class="btn" onclick="openEditNoticeModal('${n.id}')">Edit</button> <button class="btn ghost" onclick="deleteNoticeConfirm('${n.id}')">Delete</button></div>`;
+    }
+    return `<div style="padding:12px;border:1px solid #eef3f6;border-radius:8px;margin-bottom:8px">
+      <strong>${esc(n.title)}</strong><div class="muted">By ${esc(n.createdBy)} • ${esc(n.createdAt)}</div>
+      <p>${esc(n.body)}</p>
+      ${controls}
+    </div>`;
+  }).join('');
+  qs('noticeListArea').innerHTML = notices.length ? listHtml : '<p>No notices yet.</p>';
+  // show add button area
+  qs('noticeControls').innerHTML = '';
+  if(window.currentUser && (window.currentUser.role==='Admin' || window.currentUser.role==='SubAdmin')){
+    qs('noticeControls').innerHTML = '<button class="btn" onclick="openAddNoticeModal()">Add Notice</button>';
+  }
+}
+function openAddNoticeModal(editId){
+  if(!window.currentUser || !(window.currentUser.role==='Admin' || window.currentUser.role==='SubAdmin')) return alert('Only Admin/SubAdmin can add notices');
+  if(editId){
+    const n = loadNotices().find(x=>x.id===editId);
+    if(!n) return alert('Notice not found');
+    const html = `<h3>Edit Notice</h3>
+      <label>Title</label><input id="noticeTitle" value="${esc(n.title)}" />
+      <label>Body</label><textarea id="noticeBody">${esc(n.body)}</textarea>
+      <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" id="saveNoticeEdit">Save</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`;
+    showModal(html);
+    qs('saveNoticeEdit').addEventListener('click', function(){ saveNotice(editId); });
+  } else {
+    const html = `<h3>Add Notice</h3>
+      <label>Title</label><input id="noticeTitle" />
+      <label>Body</label><textarea id="noticeBody"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" id="saveNoticeNew">Save</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`;
+    showModal(html);
+    qs('saveNoticeNew').addEventListener('click', function(){ saveNotice(); });
+  }
+}
+function saveNotice(editId){
+  const title = qs('noticeTitle').value.trim();
+  const body = qs('noticeBody').value.trim();
+  if(!title||!body) return alert('Fill title and body');
+  let list = loadNotices();
+  if(editId){
+    const idx = list.findIndex(x=>x.id===editId); if(idx<0) return alert('Not found');
+    list[idx].title = title; list[idx].body = body; list[idx].updatedAt = (new Date()).toLocaleString();
+    saveNotices(list); closeModal(); renderNotices(); updateStats(); return;
+  }
+  const nt = {id: uid('n'), title, body, createdBy: window.currentUser.email, createdAt:(new Date()).toLocaleString()};
+  list.unshift(nt); saveNotices(list); closeModal(); renderNotices(); updateStats();
+}
+function openEditNoticeModal(id){ openAddNoticeModal(id); }
+function deleteNoticeConfirm(id){ if(!confirm('Delete this notice?')) return; let list = loadNotices().filter(n=>n.id!==id); saveNotices(list); renderNotices(); updateStats(); }
+
+/* ---- PROGRAM/COURSE Management (Admin/SubAdmin) ---- */
+function renderPrograms(){
+  const programs = loadPrograms();
+  const listHtml = programs.map(p=>{
+    let controls = '';
+    if(window.currentUser && (window.currentUser.role==='Admin' || window.currentUser.role==='SubAdmin')){
+      controls = `<div style="margin-top:8px;text-align:right"><button class="btn" onclick="openEditProgramModal('${p.id}')">Edit</button> <button class="btn ghost" onclick="deleteProgramConfirm('${p.id}')">Delete</button></div>`;
+    }
+    return `<div style="padding:12px;border:1px solid #eef3f6;border-radius:8px;margin-bottom:8px">
+      <strong>${esc(p.title)}</strong><div class="muted">By ${esc(p.createdBy)} • ${esc(p.createdAt)}</div>
+      <p>${esc(p.desc)}</p>
+      ${controls}
+    </div>`;
+  }).join('');
+  qs('programListArea').innerHTML = programs.length ? listHtml : '<p>No programs yet.</p>';
+  qs('programControls').innerHTML = '';
+  if(window.currentUser && (window.currentUser.role==='Admin' || window.currentUser.role==='SubAdmin')){
+    qs('programControls').innerHTML = '<button class="btn" onclick="openAddProgramModal()">Add Program</button>';
+  }
+}
+function openAddProgramModal(editId){
+  if(!window.currentUser || !(window.currentUser.role==='Admin' || window.currentUser.role==='SubAdmin')) return alert('Only Admin/SubAdmin can add programs');
+  if(editId){
+    const p = loadPrograms().find(x=>x.id===editId);
+    if(!p) return alert('Program not found');
+    const html = `<h3>Edit Program</h3>
+      <label>Title</label><input id="progTitle" value="${esc(p.title)}" />
+      <label>Description</label><textarea id="progDesc">${esc(p.desc)}</textarea>
+      <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" id="saveProgEdit">Save</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`;
+    showModal(html);
+    qs('saveProgEdit').addEventListener('click', function(){ saveProgram(editId); });
+  } else {
+    const html = `<h3>Add Program</h3>
+      <label>Title</label><input id="progTitle" />
+      <label>Description</label><textarea id="progDesc"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px"><button class="btn" id="saveProgNew">Save</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`;
+    showModal(html);
+    qs('saveProgNew').addEventListener('click', function(){ saveProgram(); });
+  }
+}
+function saveProgram(editId){
+  const title = qs('progTitle').value.trim();
+  const desc = qs('progDesc').value.trim();
+  if(!title) return alert('Title required');
+  let list = loadPrograms();
+  if(editId){
+    const idx = list.findIndex(x=>x.id===editId); if(idx<0) return alert('Not found');
+    list[idx].title = title; list[idx].desc = desc; list[idx].updatedAt = (new Date()).toLocaleString();
+    savePrograms(list); closeModal(); renderPrograms(); updateStats(); return;
+  }
+  const obj = {id: uid('p'), title, desc, createdBy: window.currentUser.email, createdAt:(new Date()).toLocaleString()};
+  list.unshift(obj); savePrograms(list); closeModal(); renderPrograms(); updateStats();
+}
+function openEditProgramModal(id){ openAddProgramModal(id); }
+function deleteProgramConfirm(id){ if(!confirm('Delete this program?')) return; let list = loadPrograms().filter(p=>p.id!==id); savePrograms(list); renderPrograms(); updateStats(); }
+
+/* ---- Event Management (Admin/SubAdmin/Faculty) - helper to open management modal ---- */
+function openManageEventsModal(){
+  if(!window.currentUser || !(window.currentUser.role==='Admin' || window.currentUser.role==='SubAdmin' || window.currentUser.role==='Faculty')) return alert('Only Admin/SubAdmin/Faculty can manage events');
+  const events = loadEvents();
+  let html = `<h3>Manage Events</h3><div style="margin-bottom:8px"><button class="btn" onclick="openAddEventModal()">Add Event</button></div>`;
+  if(events.length===0) html += `<p>No events</p>`;
+  else {
+    html += `<table class="table"><thead><tr><th>Title</th><th>Date</th><th>Created By</th><th>Actions</th></tr></thead><tbody>`;
+    events.forEach(e=>{ html += `<tr><td>${esc(e.title)}</td><td>${esc(e.date)}</td><td>${esc(e.createdBy)}</td><td><button class="btn ghost" onclick="openAddEventModal('${e.id}')">Edit</button> <button class="btn ghost" onclick="deleteEventConfirm('${e.id}')">Delete</button></td></tr>`; });
+    html += `</tbody></table>`;
+  }
+  html += `<div style="text-align:right;margin-top:12px"><button class="btn ghost" onclick="closeModal()">Close</button></div>`;
+  showModal(html);
+}
+function deleteEventConfirm(id){ if(!confirm('Delete this event?')) return; deleteEvent(id); }
+
+/* ---- Reports (Admin) ---- */
+function renderReports(){
+  if(!window.currentUser || window.currentUser.role!=='Admin') { qs('reportsArea').innerHTML = '<p>Only Admin can view reports.</p>'; return; }
+  const users = loadUsers();
+  const events = loadEvents();
+  const notices = loadNotices();
+  const programs = loadPrograms();
+  const quizzes = loadQuizzes();
+  const countsByRole = {Student:0,Faculty:0,Admin:0,SubAdmin:0,Other:0};
+  Object.values(users).forEach(u=>{ countsByRole[u.role] = (countsByRole[u.role]||0)+1; });
+  let html = `<div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div style="background:#fff;padding:12px;border-radius:8px;min-width:180px"><strong>Users</strong><div>Students: ${countsByRole.Student}</div><div>Faculty: ${countsByRole.Faculty}</div><div>SubAdmin: ${countsByRole.SubAdmin}</div><div>Admin: ${countsByRole.Admin}</div></div>
+    <div style="background:#fff;padding:12px;border-radius:8px;min-width:180px"><strong>Programs</strong><div>Total: ${programs.length}</div></div>
+    <div style="background:#fff;padding:12px;border-radius:8px;min-width:180px"><strong>Events</strong><div>Upcoming: ${events.length}</div></div>
+    <div style="background:#fff;padding:12px;border-radius:8px;min-width:180px"><strong>Notices</strong><div>Active: ${notices.length}</div></div>
+    <div style="background:#fff;padding:12px;border-radius:8px;min-width:180px"><strong>Quizzes</strong><div>Total: ${quizzes.length}</div></div>
+  </div>`;
+  // simple recent activity (last 5)
+  html += `<h3 style="margin-top:12px">Recent Activity</h3>`;
+  const recent = [];
+  events.slice(-3).reverse().forEach(e=> recent.push(`${e.createdAt || ''} - Event: ${e.title}`));
+  notices.slice(0,3).forEach(n=> recent.push(`${n.createdAt || ''} - Notice: ${n.title}`));
+  programs.slice(0,3).forEach(p=> recent.push(`${p.createdAt || ''} - Program: ${p.title}`));
+  html += `<ul>${recent.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>`;
+  qs('reportsArea').innerHTML = html;
+}
+
+/* ---- Stats update ---- */
+function updateStats(){
+  const users = loadUsers();
+  const events = loadEvents();
+  const notices = loadNotices();
+  const programs = loadPrograms();
+  qs('statUsers').innerText = Object.keys(users).length;
+  qs('statPrograms').innerText = programs.length;
+  qs('statEvents').innerText = events.length;
+  qs('statNotices').innerText = notices.length;
+}
+
+/* ----- utility functions for notices/programs management called from controls ----- */
+
+/* helper to open management modals quickly */
+function openManageNoticesModal(){ if(!window.currentUser || !(window.currentUser.role==='Admin' || window.currentUser.role==='SubAdmin')) return alert('Only Admin/SubAdmin'); openAddNoticeModal(); }
+function openManageProgramsModal(){ if(!window.currentUser || !(window.currentUser.role==='Admin' || window.currentUser.role==='SubAdmin')) return alert('Only Admin/SubAdmin'); openAddProgramModal(); }
+
+/* ----- initialization if session exists ----- */
+const u = sessionStorage.getItem('user'); if(u) initDashboard(JSON.parse(u));
+
+/* small helper called after DOM ready to render initial lists */
+document.addEventListener('DOMContentLoaded', function(){
+  renderNotices(); renderPrograms(); renderCalendar(); updateStats();
+});
+
+</script>
+<script>
+async function openAdminSignup(){
+  if(!window.currentUser || window.currentUser.role !== 'Admin'){
+    alert("Only Admin can create users");
+    return;
+  }
+
+  const html = `
+    <h3>Create New User (Admin)</h3>
+
+    <label>Name</label>
+    <input id="adminSignupName"/>
+
+    <label>Email</label>
+    <input id="adminSignupEmail" type="email"/>
+
+    <label>Password</label>
+    <input id="adminSignupPassword" type="password"/>
+
+    <label>Role</label>
+    <select id="adminSignupRole">
+      <option value="">Select Role</option>
+      <option value="Student">Student</option>
+      <option value="Faculty">Faculty</option>
+      <option value="SubAdmin">SubAdmin</option>
+      <option value="Admin">Admin</option>
+    </select>
+
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn" onclick="adminCreateUser()">Create</button>
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+    </div>
+  `;
+  showModal(html);
+}
+
+async function adminCreateUser(){
+  const name = qs('adminSignupName').value.trim();
+  const email = qs('adminSignupEmail').value.trim().toLowerCase();
+  const pass = qs('adminSignupPassword').value;
+  const role = qs('adminSignupRole').value;
+
+  if(!name || !email || !pass || !role){
+    alert("Fill all fields");
+    return;
+  }
+
+  try{
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await db.collection('users').doc(cred.user.uid).set({
+      name,
+      email,
+      role,
+      createdBy: window.currentUser.email,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("User created successfully");
+    closeModal();
+  }catch(err){
+    alert(err.message);
+  }
+}
+
+</script>
+<script>
+/* ===== MANAGE USERS – GLOBAL ===== */
+let allUsers = [];
+let currentPage = 1;
+const pageSize = 8;
+
+let userNameSearch = "";
+let userEmailSearch = "";
+let userRoleFilter = "";
+
+/* ===== OPEN MANAGE USERS ===== */
+function openManageUsers(){
+  if(!window.currentUser || window.currentUser.role !== 'Admin'){
+    alert("Only Admin can manage users");
+    return;
+  }
+
+  db.collection("users").get().then(snapshot=>{
+    allUsers = [];
+    snapshot.forEach(doc=>{
+      allUsers.push({ id: doc.id, ...doc.data() });
+    });
+    currentPage = 1;
+    showManageUsersModal();
+    renderUsersTableBody();
+  });
+}
+
+/* ===== MODAL STRUCTURE ===== */
+function showManageUsersModal(){
+  const html = `
+  <div style="height:80vh;display:flex;flex-direction:column">
+
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0">Manage Users</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn ghost" onclick="exportUsersCSV()">⬇ Export CSV</button>
+        <label class="btn ghost" style="cursor:pointer">
+          ⬆ Import CSV
+          <input type="file" accept=".csv" style="display:none"
+            onchange="importUsersCSV(this.files[0])">
+        </label>
+        <button onclick="closeModal()"
+          style="background:none;border:none;font-size:22px;cursor:pointer">❌</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
+      <input placeholder="🔍 Search Name"
+        oninput="userNameSearch=this.value;currentPage=1;renderUsersTableBody()">
+      <input placeholder="📧 Search Email"
+        oninput="userEmailSearch=this.value;currentPage=1;renderUsersTableBody()">
+      <select onchange="userRoleFilter=this.value;currentPage=1;renderUsersTableBody()">
+        <option value="">All Roles</option>
+        <option>Student</option>
+        <option>Faculty</option>
+        <option>SubAdmin</option>
+        <option>Admin</option>
+      </select>
+    </div>
+
+    <div style="flex:1;overflow:auto">
+      <table class="table">
+        <thead>
+          <tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="usersTableBody"></tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;margin-top:10px">
+      <button class="btn ghost" onclick="if(currentPage>1){currentPage--;renderUsersTableBody()}">◀ Prev</button>
+      <strong id="userPageInfo"></strong>
+      <button class="btn ghost" onclick="currentPage++;renderUsersTableBody()">Next ▶</button>
+    </div>
+  </div>`;
+  showModal(html);
+}
+
+/* ===== RENDER TABLE ===== */
+function renderUsersTableBody(){
+  const name = userNameSearch.toLowerCase();
+  const email = userEmailSearch.toLowerCase();
+  const role = userRoleFilter;
+
+  const filtered = allUsers.filter(u=>{
+    return (!name || (u.name||"").toLowerCase().includes(name)) &&
+           (!email || (u.email||"").toLowerCase().includes(email)) &&
+           (!role || u.role === role);
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  if(currentPage > totalPages) currentPage = totalPages;
+
+  const start = (currentPage - 1) * pageSize;
+  const users = filtered.slice(start, start + pageSize);
+
+  document.getElementById("usersTableBody").innerHTML =
+    users.length ? users.map(u=>`
+      <tr>
+        <td>${u.name||"-"}</td>
+        <td>${u.email||"-"}</td>
+        <td>${u.role||"-"}</td>
+        <td>
+          <button class="btn ghost" onclick="editUser('${u.id}','${u.role}')">Edit</button>
+          <button class="btn ghost" onclick="resetUserPassword('${u.email}')">Reset PW</button>
+          <button class="btn ghost" onclick="deleteUserConfirm('${u.id}','${u.email}')">Delete</button>
+        </td>
+      </tr>`).join("")
+    : `<tr><td colspan="4">No users found</td></tr>`;
+
+  document.getElementById("userPageInfo").innerText =
+    `Page ${currentPage} of ${totalPages}`;
+}
+
+/* ===== ACTIONS ===== */
+function editUser(id, role){
+  const html = `
+    <h3>Edit Role</h3>
+    <select id="editRole">
+      <option>Student</option>
+      <option>Faculty</option>
+      <option>SubAdmin</option>
+      <option>Admin</option>
+    </select>
+    <div style="margin-top:10px">
+      <button class="btn" onclick="saveUserRole('${id}')">Save</button>
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+    </div>`;
+  showModal(html);
+  setTimeout(()=>document.getElementById("editRole").value=role,50);
+}
+
+function saveUserRole(id){
+  const role = document.getElementById("editRole").value;
+  db.collection("users").doc(id).update({role}).then(openManageUsers);
+}
+
+function resetUserPassword(email){
+  if(confirm("Send reset password link?")){
+    firebase.auth().sendPasswordResetEmail(email);
+  }
+}
+
+function deleteUserConfirm(id,email){
+  if(confirm("Delete "+email+" ?")){
+    db.collection("users").doc(id).delete().then(openManageUsers);
+  }
+}
+
+/* ===== EXPORT CSV ===== */
+function exportUsersCSV(){
+  const rows=[["Name","Email","Role"]];
+  allUsers.forEach(u=>rows.push([u.name||"",u.email||"",u.role||""]));
+  const csv=rows.map(r=>r.map(v=>`"${v}"`).join(",")).join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="users.csv";
+  a.click();
+}
+
+/* ===== IMPORT POPUP ===== */
+function openImportPopup(){
+  importProgressModal.style.display="flex";
+  importBar.style.width="0%";
+  importPercent.innerText="0%";
+  importStatus.innerText="Initializing…";
+  importCloseBtn.style.display="none";
+}
+function updateImportProgress(p,t){
+  importBar.style.width=p+"%";
+  importPercent.innerText=p+"%";
+  importStatus.innerText=t||"";
+}
+function finishImportPopup(){
+  importStatus.innerText="Import completed ✔";
+  importCloseBtn.style.display="inline-block";
+}
+function closeImportPopup(){
+  importProgressModal.style.display="none";
+}
+
+/* ===== IMPORT CSV (FINAL + SUMMARY) ===== */
+async function importUsersCSV(file){
+  if(!file) return;
+  openImportPopup();
+
+  const lines=(await file.text()).split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2){ alert("Invalid CSV"); return; }
+
+  let created=0, updated=0, failed=0;
+  const total=lines.length-1;
+
+  for(let i=1;i<lines.length;i++){
+    const [name,email,role]=lines[i].split(",").map(v=>v.replace(/"/g,"").trim());
+    try{
+      try{
+        await firebase.auth().createUserWithEmailAndPassword(email,"Temp@123");
+        await firebase.auth().sendPasswordResetEmail(email);
+        created++;
+      }catch(e){
+        if(e.code==="auth/email-already-in-use") updated++;
+        else throw e;
+      }
+
+      const q=await db.collection("users").where("email","==",email).get();
+      q.empty
+        ? await db.collection("users").add({name,email,role})
+        : q.forEach(d=>d.ref.update({name,role}));
+    }catch{
+      failed++;
+    }
+    updateImportProgress(Math.round((i/total)*100),`Importing ${i} of ${total}`);
+  }
+
+  finishImportPopup();
+  alert(
+    "Import Completed ✅\n\n"+
+    "New Auth Users: "+created+"\n"+
+    "Updated Users: "+updated+"\n"+
+    "Failed Rows: "+failed
+  );
+  openManageUsers();
+}
+function showLoginMessage(text, type) {
+  const box = document.getElementById('loginMessage');
+  if (!box) return;
+
+  box.innerText = text;
+  box.style.display = 'block';
+  box.style.opacity = '1';
+
+  if (type === 'success') {
+    box.style.background = '#e6ffef';
+    box.style.color = '#065f46';
+    box.style.border = '1px solid #34d399';
+  } else {
+    box.style.background = '#fff3f3';
+    box.style.color = '#7f1d1d';
+    box.style.border = '1px solid #fca5a5';
+  }
+}
+
+
+</script>
+
+<!-- IMPORT PROGRESS POPUP -->
+<div id="importProgressModal"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;
+  align-items:center;justify-content:center;">
+  <div style="background:#fff;padding:20px;border-radius:10px;width:360px">
+    <h3>Importing Users…</h3>
+    <div style="background:#eee;height:14px;border-radius:8px;overflow:hidden">
+      <div id="importBar" style="width:0%;height:100%;background:#009688"></div>
+    </div>
+    <div>Progress: <span id="importPercent">0%</span></div>
+    <div id="importStatus">Initializing…</div>
+    <button id="importCloseBtn" style="display:none" onclick="closeImportPopup()">Close</button>
+  </div>
+</div>
+</script>
+<script>
+async function handleForgotPassword(){
+  let email = document.getElementById("loginEmail")?.value
+    ?.trim()
+    ?.toLowerCase();
+
+  // 🔑 If input empty → ask via popup
+  if(!email){
+    email = prompt("Please enter your registered email address:");
+    if(!email) return; // user cancelled
+    email = email.trim().toLowerCase();
+  }
+
+  try{
+    await firebase.auth().sendPasswordResetEmail(email);
+    alert(
+      "Password reset link sent successfully ✅\n\n" +
+      "Please check your email inbox (and Spam folder)."
+    );
+  }catch(err){
+    console.error(err);
+    alert("Error: " + err.message);
+  }
+}
+function showLogoutMessage() {
+  // Dashboard hide, login show
+  const auth = document.getElementById('auth');
+  const dashboard = document.getElementById('dashboard');
+
+  if (dashboard) dashboard.style.display = 'none';
+  if (auth) auth.style.display = 'flex';
+
+  showLoginMessage('Logged out successfully 👋', 'success');
+}
+
+</script>
+
+
+</body>
+</html>
+

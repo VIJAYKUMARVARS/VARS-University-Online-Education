@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Program Viewer – VARS LMS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --green:#007c63;
+      --green-dark:#00594f;
+      --bg:#f4f6fb;
+      --card-bg:#ffffff;
+      --border:#e1e5ee;
+      --muted:#6b7280;
+      --radius-lg:14px;
+      --shadow-soft:0 10px 30px rgba(15,23,42,0.12);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      background:radial-gradient(circle at top left,#e0fbf4,#f4f6fb);
+      color:#111827;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+    .topbar{
+      background:linear-gradient(120deg,var(--green-dark),#009688);
+      color:#fff;
+      padding:12px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      box-shadow:0 4px 15px rgba(0,0,0,0.18);
+      z-index:10;
+    }
+    .topbar-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .topbar-title{font-size:16px;font-weight:600;}
+    .topbar-sub{font-size:11px;color:rgba(255,255,255,0.85);}
+    .topbar-user{font-size:12px;text-align:right;}
+    .pill-role{
+      display:inline-flex;align-items:center;gap:4px;
+      font-size:11px;padding:3px 8px;
+      border-radius:999px;background:rgba(255,255,255,0.14);
+    }
+    .btn-top{
+      border-radius:999px;border:0;
+      padding:6px 12px;
+      font-size:12px;cursor:pointer;
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(255,255,255,0.16);color:#ecfdf5;
+    }
+    .layout{
+      flex:1;display:flex;gap:12px;
+      padding:12px;
+    }
+    @media(max-width:900px){
+      .layout{flex-direction:column;}
+    }
+    .panel-left{
+      width:320px;max-width:100%;
+      background:rgba(255,255,255,0.96);
+      border-radius:var(--radius-lg);
+      box-shadow:var(--shadow-soft);
+      padding:12px;
+      border:1px solid rgba(148,163,184,0.25);
+      display:flex;flex-direction:column;gap:8px;
+    }
+    .panel-right{
+      flex:1;
+      background:rgba(255,255,255,0.98);
+      border-radius:var(--radius-lg);
+      box-shadow:var(--shadow-soft);
+      padding:12px;
+      border:1px solid rgba(148,163,184,0.25);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .program-header{
+      padding:8px 10px;
+      border-radius:10px;
+      background:linear-gradient(135deg,#ecfdf5,#eff6ff);
+      border:1px solid #dbeafe;
+      display:flex;flex-direction:column;gap:4px;
+    }
+    .program-name{font-size:14px;font-weight:600;}
+    .program-meta{font-size:11px;color:var(--muted);}
+    .pill-status{
+      margin-top:4px;
+      display:inline-flex;align-items:center;gap:4px;
+      padding:3px 8px;border-radius:999px;
+      background:#ecfdf5;color:#047857;
+      font-size:11px;
+    }
+    .scroll-area{
+      flex:1;
+      border-radius:10px;
+      border:1px dashed #e5e7eb;
+      padding:8px;
+      overflow:auto;
+      background:#f9fafb;
+    }
+    .accordion{display:flex;flex-direction:column;gap:6px;}
+    .sem-block{
+      border-radius:10px;
+      border:1px solid #e5e7eb;
+      background:#ffffff;
+      overflow:hidden;
+    }
+    .sem-head{
+      padding:6px 8px;
+      display:flex;align-items:center;justify-content:space-between;
+      background:linear-gradient(90deg,#eff6ff,#eef2ff);
+      cursor:pointer;
+      font-size:12px;
+    }
+    .sem-title{font-weight:600;}
+    .sem-badge{
+      font-size:10px;padding:2px 6px;
+      border-radius:999px;
+      background:#e0f2fe;color:#0369a1;
+    }
+    .sem-body{
+      padding:6px 8px;
+      display:block;
+      background:#f9fafb;
+      border-top:1px solid #e5e7eb;
+    }
+    .unit-block{
+      margin-bottom:6px;
+      padding:6px 8px;
+      border-radius:8px;
+      background:#fefefe;
+      border:1px solid #e5e7eb;
+    }
+    .unit-head{
+      display:flex;align-items:center;justify-content:space-between;
+      font-size:12px;
+    }
+    .unit-title{font-weight:600;}
+    .unit-actions{
+      display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;
+    }
+    .pill-small{
+      font-size:10px;padding:2px 6px;border-radius:999px;
+      border:1px solid #cbd5e1;background:#ffffff;
+      cursor:pointer;
+    }
+    .pill-small.danger{border-color:#fecaca;color:#b91c1c;background:#fee2e2;}
+    .item-list{margin-top:6px;display:flex;flex-direction:column;gap:4px;}
+    .item-row{
+      display:flex;align-items:center;justify-content:space-between;
+      font-size:11px;
+      padding:3px 5px;
+      border-radius:6px;
+      background:#f1f5f9;
+      cursor:pointer;
+    }
+    .item-row.active{background:#e0ecff;}
+    .item-label{display:flex;align-items:center;gap:4px;}
+    .item-type{
+      font-size:10px;padding:1px 4px;border-radius:999px;
+      background:#eef2ff;color:#4338ca;
+    }
+    .item-actions{display:flex;gap:4px;}
+    .btn-xs{
+      font-size:10px;padding:2px 4px;border-radius:999px;
+      border:1px solid #cbd5f5;background:#ffffff;cursor:pointer;
+    }
+    .btn-xs.danger{border-color:#fecaca;background:#fee2e2;color:#b91c1c;}
+
+    .section-title{font-size:13px;font-weight:600;}
+    .muted{font-size:12px;color:var(--muted);}
+    .viewer-frame{
+      flex:1;
+      border-radius:10px;
+      border:1px solid #e5e7eb;
+      overflow:hidden;
+      background:#0f172a;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+    }
+    .viewer-inner{
+      width:100%;height:100%;
+      display:flex;align-items:center;justify-content:center;
+      background:#020617;
+    }
+    .viewer-placeholder{
+      color:#9ca3af;font-size:12px;text-align:center;padding:12px;
+    }
+    iframe.viewer-iframe{
+      width:100%;height:100%;border:0;background:#0b1120;
+    }
+    .viewer-notes{
+      width:100%;height:100%;
+      padding:10px;
+      background:#020617;
+      color:#e5e7eb;
+      font-size:13px;
+      line-height:1.5;
+      overflow:auto;
+    }
+    .viewer-toolbar{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:8px;font-size:12px;
+    }
+    .viewer-toolbar-left{display:flex;flex-direction:column;gap:2px;}
+    .viewer-toolbar-right{display:flex;align-items:center;gap:6px;}
+    .btn-nav{
+      border-radius:999px;border:1px solid #cbd5f5;
+      background:#f9fafb;font-size:11px;padding:4px 8px;
+      display:inline-flex;align-items:center;gap:4px;cursor:pointer;
+    }
+    .btn-nav-primary{
+      background:#2563eb;color:#eff6ff;
+      border-color:#1d4ed8;
+    }
+    .help-btn{
+      position:fixed;right:16px;bottom:16px;
+      width:44px;height:44px;border-radius:999px;
+      border:none;background:radial-gradient(circle at 30% 0,#e0f2fe,#d1fae5);
+      color:#064e3b;font-size:22px;
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 16px 30px rgba(15,23,42,0.3);
+      cursor:pointer;z-index:30;
+    }
+    .help-popover{
+      position:fixed;right:70px;bottom:22px;
+      max-width:260px;background:#ffffff;
+      border-radius:12px;box-shadow:var(--shadow-soft);
+      border:1px solid rgba(148,163,184,0.25);
+      padding:10px 12px;font-size:12px;color:#374151;z-index:29;
+    }
+    .help-popover strong{display:block;margin-bottom:4px;}
+    .card-mini{
+      border-radius:10px;border:1px solid #e5e7eb;
+      padding:6px 8px;font-size:11px;background:#f9fafb;
+    }
+    .field-group{margin-top:6px;display:flex;flex-direction:column;gap:3px;}
+    label{font-size:11px;color:#4b5563;}
+    input[type="text"], select, textarea{
+      width:100%;font-size:11px;padding:6px 7px;
+      border-radius:7px;border:1px solid #cbd5e1;
+      background:#f9fafb;outline:none;
+    }
+    textarea{min-height:50px;}
+    input:focus,select:focus,textarea:focus{
+      border-color:#4f46e5;
+      box-shadow:0 0 0 1px rgba(79,70,229,0.3);
+      background:#ffffff;
+    }
+    .btn-small{
+      border-radius:999px;border:1px solid #cbd5f5;
+      background:#ffffff;font-size:11px;
+      padding:4px 8px;cursor:pointer;
+      display:inline-flex;align-items:center;gap:4px;
+    }
+    .btn-small.primary{
+      background:#16a34a;border-color:#16a34a;color:#ecfdf5;
+    }
+  </style>
+
+<!-- Firebase SDKs (compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCDl6SlZo1kpnce0xMDa81wQ9GdaE5-GE0",
+    authDomain: "vars-lms.firebaseapp.com",
+    projectId: "vars-lms",
+    storageBucket: "vars-lms.firebasestorage.app",
+    messagingSenderId: "703858663216",
+    appId: "1:703858663216:web:bbe6224dd645e1ae1d32f5",
+    measurementId: "G-XQ54JJTL7D"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+</script>
+
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="btn-top" onclick="goBackPrograms()">⬅ My Programs</button>
+      <div>
+        <div class="topbar-title" id="topProgramName">Program Viewer</div>
+        <div class="topbar-sub" id="topProgramMeta">Loading program…</div>
+      </div>
+    </div>
+    <div class="topbar-user">
+      <button class="btn-top" onclick="window.location.href='support.html'">❓ Help</button>
+      <div id="userName">—</div>
+      <div class="pill-role" id="userRole">Role: —</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- LEFT: Semesters / Units / Items -->
+    <aside class="panel-left">
+      <div class="program-header">
+        <div class="program-name" id="leftProgramName">—</div>
+        <div class="program-meta" id="leftProgramMeta">Program details…</div>
+        <div class="pill-status" id="leftStatusPill" style="display:none;">
+          <span id="leftStatusText"></span>
+        </div>
+      </div>
+
+      <div class="scroll-area">
+        <div class="section-title" style="margin:6px 0 2px;">Semesters & Units</div>
+        <div class="muted">Click a content item (1.1 PDF, 1.2 Video, etc.) to open it in the viewer.</div>
+        <div id="accordionContainer" class="accordion" style="margin-top:6px;"></div>
+      </div>
+
+      <div id="manageBlock" style="margin-top:6px;"></div>
+    </aside>
+
+    <!-- RIGHT: Viewer -->
+    <section class="panel-right">
+      <div class="viewer-toolbar">
+        <div class="viewer-toolbar-left">
+          <div class="section-title" id="currentItemTitle">No item selected</div>
+          <div class="muted" id="currentItemMeta">Choose a content item from the left panel.</div>
+        </div>
+        <div class="viewer-toolbar-right">
+          <button class="btn-nav" onclick="prevItem()">⬅ Prev</button>
+          <button class="btn-nav" onclick="nextItem()">Next ➡</button>
+          <button class="btn-nav" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+        </div>
+      </div>
+
+      <div class="viewer-frame" id="viewerFrame">
+        <div class="viewer-inner" id="viewerInner">
+          <div class="viewer-placeholder">
+            Select any PDF / Video / Notes from the left side to start.
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <button class="help-btn" id="helpBtn">?</button>
+  <div class="help-popover" id="helpPopover" style="display:none;">
+    <strong>Program Viewer Help</strong>
+    <div>
+      • Left: Semester → Units → Items (1.1 PDF, 1.2 Video, 1.3 Notes…).<br/>
+      • Right: One page viewer for PDF / PPT / Video / Notes.<br/>
+      • Staff: Units & items add/edit/delete directly from left panel.<br/>
+      • Student: Sirf view mode (no edit).
+    </div>
+  </div>
+
+  <script>
+    const PROGRAMS_KEY='gla_programs',
+          ENROLL_KEY='gla_enrollments',
+          CONTENT_KEY='gla_program_contents';
+
+    function load(key, defVal){
+      try{ const raw=localStorage.getItem(key); return raw?JSON.parse(raw):defVal; }
+      catch(e){console.error('load',key,e); return defVal;}
+    }
+    function save(key,val){ localStorage.setItem(key,JSON.stringify(val)); }
+
+    // ⬅ My Programs -> main Dashboard My Programs section
+    function goBackPrograms(){
+      window.location.href='Final_LMS_DashboardFixed_Full.html#programs';
+    }
+
+    function ensureUser(){
+      const raw=sessionStorage.getItem('user');
+      if(!raw){ goBackPrograms(); return null; }
+      try{
+        const u=JSON.parse(raw);
+        document.getElementById('userName').textContent=u.name+' ('+u.email+')';
+        document.getElementById('userRole').textContent='Role: '+u.role;
+        return u;
+      }catch(e){console.error(e); goBackPrograms(); return null;}
+    }
+    const currentUser=ensureUser();
+    if(!currentUser){}
+
+    function escapeHtml(s){
+      if(s===undefined||s===null)return'';
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    function isAdminLike(){
+      return currentUser &&
+        (currentUser.role==='Admin'||currentUser.role==='SubAdmin');
+    }
+    function canManageContent(){
+      return currentUser &&
+        (currentUser.role==='Admin'||currentUser.role==='SubAdmin'||currentUser.role==='Faculty');
+    }
+
+    // YouTube URL -> embed URL helper
+    function makeYoutubeEmbedUrl(src){
+      try{
+        var url = new URL(src);
+        // youtu.be short link
+        if (url.hostname.includes('youtu.be')) {
+          var id = url.pathname.split('/').filter(Boolean)[0];
+          if (id) return 'https://www.youtube.com/embed/' + id;
+        }
+        // youtube.com links
+        if (url.hostname.includes('youtube.com')) {
+          if (url.pathname.startsWith('/embed/')) return src;
+          var v = url.searchParams.get('v');
+          if (v) return 'https://www.youtube.com/embed/' + v;
+        }
+      }catch(e){}
+      return null;
+    }
+
+    function getCurrentProgramId(){
+      // from storage (programs.html ne set kiya tha)
+      try{
+        const raw=localStorage.getItem('gla_current_program_view');
+        if(raw){
+          const o=JSON.parse(raw);
+          if(o&&o.programId) return o.programId;
+        }
+      }catch(e){}
+      return null;
+    }
+
+    function getEnrollmentStatus(programId){
+      const all=load(ENROLL_KEY,[]);
+      return all.find(e=>e.studentEmail===currentUser.email && e.programId===programId) || null;
+    }
+
+    let program=null;
+    let contents=[]; // all content objects for this program
+    let flatItems=[]; // flattened for Prev/Next
+    let currentItemIdx=-1;
+
+    function loadProgramAndContent(){
+      const pid=getCurrentProgramId();
+      const allProg=load(PROGRAMS_KEY,[]);
+      let p=null;
+
+      if(currentUser && currentUser.role==='Student'){
+        const enrAll=load(ENROLL_KEY,[]);
+        const enr=enrAll.find(e=>e.studentEmail===currentUser.email && e.status==='approved');
+        if(enr){
+          p=allProg.find(x=>x.id===enr.programId);
+        }else{
+          if(pid) p=allProg.find(x=>x.id===pid);
+          if(!p && allProg.length) p=allProg[0];
+        }
+      }else{
+        if(pid) p=allProg.find(x=>x.id===pid);
+        if(!p && allProg.length) p=allProg[0];
+      }
+
+      if(!p){
+        document.getElementById('topProgramName').textContent='Program not found';
+        document.getElementById('topProgramMeta').textContent='Please go back to My Programs.';
+        return;
+      }
+      program=p;
+
+      const totalSem=p.totalSemesters||4;
+      document.getElementById('topProgramName').textContent=escapeHtml(p.title||'Program');
+      document.getElementById('leftProgramName').textContent=escapeHtml(p.title||'Program');
+      document.getElementById('topProgramMeta').textContent='Semesters: '+totalSem;
+      document.getElementById('leftProgramMeta').textContent='Total Semesters: '+totalSem;
+
+      if(currentUser.role==='Student'){
+        const enr=getEnrollmentStatus(p.id);
+        const pill=document.getElementById('leftStatusPill');
+        const text=document.getElementById('leftStatusText');
+        if(enr){
+          pill.style.display='inline-flex';
+          text.textContent='Status: '+(enr.status==='approved'?'Approved ✅':enr.status==='pending'?'Pending ⏳':'Rejected ❌');
+        }
+      }
+
+      const allContent=load(CONTENT_KEY,[]);
+      contents=allContent.filter(c=>c.programId===p.id);
+
+      buildAccordion(totalSem);
+      if(canManageContent()) renderManageBlock(totalSem);
+    }
+
+    function getOrCreateSemester(semNumber){
+      let sem=contents.find(c=>c.semNumber===semNumber && c.type==='__semester_meta');
+      if(!sem){
+        sem={id:'meta_'+program.id+'_'+semNumber,type:'__semester_meta',programId:program.id,semNumber};
+        contents.push(sem);
+      }
+      return sem;
+    }
+
+    function unitsForSemester(semNumber){
+      return contents.filter(c=>c.semNumber===semNumber && c.type==='unit')
+        .sort((a,b)=>a.unitNumber - b.unitNumber);
+    }
+
+    function itemsForUnit(unit){
+      return (unit.items||[]).slice().sort((a,b)=> (a.order||0) - (b.order||0));
+    }
+
+    function buildAccordion(totalSem){
+      const container=document.getElementById('accordionContainer');
+      if(!container)return;
+      let html='';
+      for(let s=1;s<=totalSem;s++){
+        const units=unitsForSemester(s);
+        const count=units.reduce((acc,u)=>acc+(u.items||[]).length,0);
+        html+=`
+          <div class="sem-block">
+            <div class="sem-head" onclick="toggleSemBody(${s})">
+              <div class="sem-title">Semester ${s}</div>
+              <div class="sem-badge">${count} item(s)</div>
+            </div>
+            <div class="sem-body" id="semBody_${s}" style="display:${s===1?'block':'none'};">
+              ${units.map(u=>renderUnitBlock(u)).join('')}
+              ${canManageContent()?`<div style="margin-top:6px;">
+                <button class="btn-small primary" onclick="addUnit(${s})">➕ Add Unit in Sem ${s}</button>
+              </div>`:''}
+            </div>
+          </div>`;
+      }
+      container.innerHTML=html;
+      rebuildFlatItems();
+    }
+
+    function renderUnitBlock(u){
+      const items=itemsForUnit(u);
+      return `
+        <div class="unit-block" id="unit_${u.id}">
+          <div class="unit-head">
+            <div class="unit-title">Unit ${u.unitNumber}: ${escapeHtml(u.title||'Untitled')}</div>
+          </div>
+          ${canManageContent()?`
+          <div class="unit-actions">
+            <button class="pill-small" onclick="editUnitPrompt('${u.id}')">✏ Edit Unit</button>
+            <button class="pill-small danger" onclick="deleteUnit('${u.id}')">🗑 Delete Unit</button>
+            <button class="pill-small" onclick="addItemPrompt('${u.id}')">➕ Add Item</button>
+          </div>`:''}
+          <div class="item-list">
+            ${items.length?items.map((it,idx)=>renderItemRow(u,it,idx)).join(''):
+              '<div class="muted" style="font-size:11px;margin-top:2px;">No content items yet.</div>'}
+          </div>
+        </div>`;
+    }
+
+    function itemTypeLabel(t){
+      switch(t){
+        case 'pdf':return 'PDF';
+        case 'video':return 'Video';
+        case 'notes':return 'Notes';
+        case 'ppt':return 'PPT';
+        case 'recording':return 'Recording';
+        case 'link':return 'Link';
+        case 'assignment':return 'Assignment';
+        default:return 'Item';
+      }
+    }
+
+    function renderItemRow(unit,it,idx){
+      const num = unit.unitNumber+'.'+(idx+1);
+      return `
+        <div class="item-row" onclick="openItem('${unit.id}','${it.id}')">
+          <div class="item-label">
+            <span>${num}</span>
+            <span>${escapeHtml(it.title||'Item')}</span>
+            <span class="item-type">${itemTypeLabel(it.type)}</span>
+          </div>
+          ${canManageContent()?`
+          <div class="item-actions" onclick="event.stopPropagation();">
+            <button class="btn-xs" onclick="editItemPrompt('${unit.id}','${it.id}')">✏</button>
+            <button class="btn-xs danger" onclick="deleteItem('${unit.id}','${it.id}')">🗑</button>
+          </div>`:''}
+        </div>`;
+    }
+
+    function toggleSemBody(s){
+      const el=document.getElementById('semBody_'+s);
+      if(!el)return;
+      el.style.display = el.style.display==='none'?'block':'none';
+    }
+
+    function renderManageBlock(totalSem){
+      const el=document.getElementById('manageBlock');
+      if(!el) return;
+      el.innerHTML=`
+        <div class="card-mini">
+          <strong>Staff Tools</strong>
+          <div class="field-group">
+            <div class="muted">
+              • Each semester: multiple Units.<br/>
+              • Each Unit: multiple items (PDF / Video / Notes / PPT / Recording / Link / Assignment).<br/>
+              • Use buttons inside each semester & unit to add or edit content.
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function saveContents(){
+      const all=load(CONTENT_KEY,[]);
+      const others=all.filter(c=>c.programId!==program.id);
+      save(CONTENT_KEY, others.concat(contents));
+    }
+
+    function addUnit(semNumber){
+      if(!canManageContent())return;
+      const title=prompt('Unit title (e.g. Introduction to XYZ):');
+      if(!title) return;
+      const existing=unitsForSemester(semNumber);
+      const nextNum=existing.length?Math.max(...existing.map(u=>u.unitNumber))+1:1;
+      const unit={
+        id:'unit_'+Math.random().toString(36).slice(2,9),
+        type:'unit',
+        programId:program.id,
+        semNumber:semNumber,
+        unitNumber:nextNum,
+        title:title,
+        items:[]
+      };
+      contents.push(unit);
+      saveContents();
+      loadProgramAndContent();
+    }
+
+    function findUnit(id){
+      return contents.find(c=>c.id===id && c.type==='unit');
+    }
+
+    function editUnitPrompt(id){
+      if(!canManageContent())return;
+      const u=findUnit(id);
+      if(!u)return;
+      const newTitle=prompt('Edit unit title:', u.title||'');
+      if(!newTitle)return;
+      u.title=newTitle;
+      saveContents();
+      loadProgramAndContent();
+    }
+
+    function deleteUnit(id){
+      if(!canManageContent())return;
+      if(!confirm('Delete this unit and all its items?'))return;
+      contents=contents.filter(c=>c.id!==id);
+      saveContents();
+      loadProgramAndContent();
+    }
+
+    function addItemPrompt(unitId){
+      if(!canManageContent())return;
+      const u=findUnit(unitId);
+      if(!u)return;
+      const title=prompt('Item title (e.g. Chapter 1 PDF):');
+      if(!title)return;
+      const type=prompt('Type? (pdf, video, notes, ppt, recording, link, assignment):','pdf');
+      if(!type)return;
+      let source='';
+      if(type==='notes'){
+        source=prompt('Enter note text (short; detailed later editable):','');
+      }else{
+        source=prompt('Enter URL (Google Drive / YouTube / PDF / PPT / etc.):','');
+      }
+      const existing=(u.items||[]);
+      const nextOrder=existing.length?Math.max(...existing.map(i=>i.order||0))+1:1;
+      const item={
+        id:'item_'+Math.random().toString(36).slice(2,9),
+        title,
+        type:type.toLowerCase(),
+        source,
+        order:nextOrder
+      };
+      if(!u.items)u.items=[];
+      u.items.push(item);
+      saveContents();
+      loadProgramAndContent();
+    }
+
+    function editItemPrompt(unitId,itemId){
+      if(!canManageContent())return;
+      const u=findUnit(unitId);
+      if(!u||!u.items)return;
+      const it=u.items.find(x=>x.id===itemId);
+      if(!it)return;
+      const title=prompt('Edit item title:', it.title||'');
+      if(!title)return;
+      const type=prompt('Edit type (pdf, video, notes, ppt, recording, link, assignment):', it.type||'pdf');
+      if(!type)return;
+      let source=it.source||'';
+      if(type==='notes'){
+        source=prompt('Edit note text:', it.source||'');
+      }else{
+        source=prompt('Edit URL:', it.source||'');
+      }
+      it.title=title;
+      it.type=type.toLowerCase();
+      it.source=source;
+      saveContents();
+      loadProgramAndContent();
+    }
+
+    function deleteItem(unitId,itemId){
+      if(!canManageContent())return;
+      if(!confirm('Delete this item?'))return;
+      const u=findUnit(unitId);
+      if(!u||!u.items)return;
+      u.items=u.items.filter(i=>i.id!==itemId);
+      saveContents();
+      loadProgramAndContent();
+    }
+
+    function rebuildFlatItems(){
+      flatItems=[];
+      if(!program) return;
+      const totalSem=program.totalSemesters||4;
+      for(let s=1;s<=totalSem;s++){
+        const units=unitsForSemester(s);
+        units.forEach(u=>{
+          const items=itemsForUnit(u);
+          items.forEach((it,idx)=>{
+            flatItems.push({semester:s, unit:u, item:it, indexInUnit:idx});
+          });
+        });
+      }
+      // reset active classes
+      const rows=document.querySelectorAll('.item-row');
+      rows.forEach(r=>r.classList.remove('active'));
+      currentItemIdx=-1;
+    }
+
+    function markActiveItem(unitId,itemId){
+      document.querySelectorAll('.item-row').forEach(r=>r.classList.remove('active'));
+      const unitEl=document.getElementById('unit_'+unitId);
+      if(!unitEl)return;
+      const list=unitEl.querySelectorAll('.item-row');
+      list.forEach(row=>{
+        if(row.getAttribute('data-id')===itemId){}
+      });
+    }
+
+    function openItem(unitId,itemId){
+      const matchIndex=flatItems.findIndex(o=>o.unit.id===unitId && o.item.id===itemId);
+      if(matchIndex===-1){ renderViewer(null); return; }
+      currentItemIdx=matchIndex;
+      renderViewer(flatItems[currentItemIdx]);
+    }
+
+    // UPDATED VIEWER (YouTube + Link/Assignment fix)
+    function renderViewer(entry){
+      const titleEl=document.getElementById('currentItemTitle');
+      const metaEl=document.getElementById('currentItemMeta');
+      const inner=document.getElementById('viewerInner');
+      if(!entry){
+        titleEl.textContent='No item selected';
+        metaEl.textContent='Choose a content item from the left panel.';
+        inner.innerHTML='<div class="viewer-placeholder">Select any PDF / Video / Notes to start.</div>';
+        return;
+      }
+      const {semester,unit,item,indexInUnit}=entry;
+      const num=unit.unitNumber+'.'+(indexInUnit+1);
+      titleEl.textContent=num+' – '+(item.title||'Item');
+      metaEl.textContent='Sem '+semester+' · Unit '+unit.unitNumber+' · '+itemTypeLabel(item.type);
+
+      // Notes = plain text
+      if(item.type==='notes'){
+        inner.innerHTML='<div class="viewer-notes">'+escapeHtml(item.source||'(No notes entered)')+'</div>';
+        return;
+      }
+
+      const srcRaw=(item.source||'').trim();
+      if(!srcRaw){
+        inner.innerHTML='<div class="viewer-placeholder">No URL provided for this item.</div>';
+        return;
+      }
+
+      // Links & Assignments -> new tab + safe message
+      if(item.type==='link' || item.type==='assignment'){
+        const safe=escapeHtml(srcRaw);
+        try{ window.open(srcRaw,'_blank','noopener'); }catch(e){}
+        inner.innerHTML =
+          '<div class="viewer-placeholder">' +
+            'This link/assignment has been opened in a new tab.<br>' +
+            '<a href="'+safe+'" target="_blank" rel="noopener">Click here if it did not open automatically.</a>' +
+          '</div>';
+        return;
+      }
+
+      // Video / recording: YouTube embed handling
+      let finalSrc=srcRaw;
+      if((item.type==='video' || item.type==='recording') &&
+          (srcRaw.includes('youtube.com') || srcRaw.includes('youtu.be'))){
+        const embed=makeYoutubeEmbedUrl(srcRaw);
+        if(embed) finalSrc=embed;
+      }
+
+      // All other URLs (PDF, PPT, normal iframes)
+      inner.innerHTML='<iframe class="viewer-iframe" src="'+escapeHtml(finalSrc)+'" allowfullscreen></iframe>';
+    }
+
+    function prevItem(){
+      if(!flatItems.length) return;
+      if(currentItemIdx<=0) currentItemIdx=flatItems.length-1;
+      else currentItemIdx--;
+      renderViewer(flatItems[currentItemIdx]);
+    }
+    function nextItem(){
+      if(!flatItems.length) return;
+      if(currentItemIdx===-1 || currentItemIdx>=flatItems.length-1) currentItemIdx=0;
+      else currentItemIdx++;
+      renderViewer(flatItems[currentItemIdx]);
+    }
+
+    function toggleFullscreen(){
+      const frame=document.getElementById('viewerFrame');
+      if(!frame)return;
+      if(!document.fullscreenElement){
+        frame.requestFullscreen?.();
+      }else{
+        document.exitFullscreen?.();
+      }
+    }
+
+    (function setupHelp(){
+      const btn=document.getElementById('helpBtn');
+      const pop=document.getElementById('helpPopover');
+      if(!btn||!pop)return;
+      let visible=false;
+      btn.addEventListener('click',()=>{visible=!visible;pop.style.display=visible?'block':'none';});
+      document.addEventListener('click',e=>{
+        if(!visible)return;
+        if(e.target===btn||pop.contains(e.target))return;
+        visible=false;pop.style.display='none';
+      });
+    })();
+
+    (function init(){
+      if(!currentUser) return;
+      loadProgramAndContent();
+    })();
+  </script>
+
+<!-- STUDENT PROGRAM LIST -->
+<div id="programList" style="display:block; margin-top:20px;"></div>
+
+<!-- ADMIN / FACULTY / SUBADMIN – REQUEST APPROVAL TABLE -->
+<div id="requestsSection" style="display:none; margin-top:40px;">
+  <h2 style="margin-bottom:10px;">Program Requests</h2>
+  <table border="1" width="100%" cellpadding="10" style="border-collapse:collapse;">
+    <thead>
+      <tr>
+        <th>Student Email</th>
+        <th>Program</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="requestsTableBody"></tbody>
+  </table>
+</div>
+
+<script>
+// Firebase program load
+async function loadPrograms() {
+    const container = document.getElementById("programList");
+    if(!container) return;
+    container.innerHTML = "<p>Loading programs...</p>";
+    const snap = await db.collection("programs").get();
+    container.innerHTML = "";
+    snap.forEach(doc => {
+        const p = doc.data();
+        const card = document.createElement("div");
+        card.style = "padding:15px; border:1px solid #ddd; margin-bottom:15px; border-radius:8px;";
+        card.innerHTML = `
+            <h3>${p.title}</h3>
+            <p>${p.description}</p>
+            <button class="request-program-btn"
+                data-program-id="${doc.id}"
+                data-program-name="${p.title}">
+                Request this Program
+            </button>`;
+        container.appendChild(card);
+    });
+}
+
+document.addEventListener("click", async function (e) {
+    if (e.target.classList.contains("request-program-btn")) {
+        const programId = e.target.dataset.programId;
+        const programName = e.target.dataset.programName;
+        const user = auth.currentUser;
+        if (!user) { alert("Please login first!"); return; }
+        await db.collection("program_requests").add({
+            studentEmail: user.email,
+            programId,
+            programName,
+            status: "pending",
+            requestedAt: new Date()
+        });
+        alert("Program request sent!");
+    }
+});
+
+async function showRequestsTable() {
+    document.getElementById("programList").style.display = "none";
+    document.getElementById("requestsSection").style.display = "block";
+    const tbody = document.getElementById("requestsTableBody");
+    tbody.innerHTML = "";
+    const snap = await db.collection("program_requests").get();
+    snap.forEach(doc => {
+        const r = doc.data();
+        tbody.innerHTML += `
+          <tr>
+            <td>${r.studentEmail}</td>
+            <td>${r.programName}</td>
+            <td>${r.status}</td>
+            <td>${r.status==="pending"
+              ? `<button onclick="approveRequest('${doc.id}')">Approve</button>
+                 <button onclick="rejectRequest('${doc.id}')">Reject</button>`
+              : r.status}
+            </td>
+          </tr>`;
+    });
+}
+
+async function approveRequest(id) {
+    await db.collection("program_requests").doc(id).update({
+        status: "approved", approvedAt: new Date()
+    });
+    alert("Approved!");
+    showRequestsTable();
+}
+
+async function rejectRequest(id) {
+    await db.collection("program_requests").doc(id).update({ status: "rejected" });
+    alert("Rejected!");
+    showRequestsTable();
+}
+
+async function handleMyProgramsClick() {
+    const user = auth.currentUser;
+    const snap = await db.collection("users").doc(user.email).get();
+    const role = snap.data().role;
+    if (role === "Student") {
+        document.getElementById("requestsSection").style.display = "none";
+        document.getElementById("programList").style.display = "block";
+        loadPrograms();
+    } else {
+        showRequestsTable();
+    }
+}
+</script>
+
+</body>
+</html>
