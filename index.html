@@ -1,37 +1,87 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>VARS LMS Loading...</title>
+<title>VARS LMS</title>
 
 <style>
 body{
 margin:0;
 padding:0;
+overflow:hidden;
+font-family:Arial;
+}
+
+/* Watermark Background */
+body::before{
+content:"";
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:url("logo.png") no-repeat center center;
+background-size:600px;
+opacity:0.05;
+z-index:0;
+}
+
+/* Login Page Iframe */
+#loginFrame{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+border:none;
+z-index:1;
+}
+
+/* Splash Overlay Logo */
+#logoSplash{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:white;
 display:flex;
 justify-content:center;
 align-items:center;
-height:100vh;
-background:#ffffff;
+z-index:9999;
+transition:opacity 1s ease;
 }
 
-img{
-max-width:60%;
-height:auto;
+#logoSplash img{
+width:300px;
+animation:zoom 2s ease;
+}
+
+@keyframes zoom{
+from{opacity:0; transform:scale(0.8);}
+to{opacity:1; transform:scale(1);}
 }
 </style>
-
-<script>
-// 5 second baad redirect
-setTimeout(function(){
-window.location.href="Final_LMS_DashboardFixed_Full.html";
-}, 5000);
-</script>
 
 </head>
 
 <body>
 
-<img src="logo.png" alt="VARS University Logo">
+<!-- Login Page Load -->
+<iframe id="loginFrame" src="Final_LMS_DashboardFixed_Full.html"></iframe>
+
+<!-- Splash Logo -->
+<div id="logoSplash">
+<img src="logo.png">
+</div>
+
+<script>
+setTimeout(function(){
+document.getElementById("logoSplash").style.opacity="0";
+setTimeout(()=>{
+document.getElementById("logoSplash").style.display="none";
+},1000);
+}, 4000);
+</script>
 
 </body>
 </html>
