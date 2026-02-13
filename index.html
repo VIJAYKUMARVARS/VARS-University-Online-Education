@@ -1,22 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>VARS UNIVERSITY</title>
+<title>VARS UNIVERSITY LMS</title>
 
 <style>
 *{
 margin:0;
 padding:0;
 box-sizing:border-box;
-font-family:Segoe UI, sans-serif;
+font-family:'Segoe UI', sans-serif;
 }
 
 body{
 overflow:hidden;
-background:#0b1f17;
+background:#02140f;
 }
 
-/* Watermark Background */
+/* Animated Gradient Background */
+body{
+background: linear-gradient(-45deg,#02140f,#063d2d,#02140f,#0b3d2c);
+background-size:400% 400%;
+animation:bgMove 15s ease infinite;
+}
+
+/* Watermark Logo */
 body::before{
 content:"";
 position:fixed;
@@ -25,13 +32,12 @@ left:0;
 width:100%;
 height:100%;
 background:url("logo.png") no-repeat center center;
-background-size:700px;
-opacity:0.04;
+background-size:750px;
+opacity:0.03;
 z-index:0;
-filter:blur(1px);
 }
 
-/* Login Frame */
+/* Background Login */
 #loginFrame{
 position:fixed;
 top:0;
@@ -42,14 +48,14 @@ border:none;
 z-index:1;
 }
 
-/* Premium Splash Screen */
+/* Splash Screen */
 #logoSplash{
 position:fixed;
 top:0;
 left:0;
 width:100%;
 height:100%;
-background:linear-gradient(135deg,#02140f,#0d3a2c);
+backdrop-filter:blur(6px);
 display:flex;
 flex-direction:column;
 justify-content:center;
@@ -60,43 +66,53 @@ transition:opacity 1.5s ease;
 
 /* Logo Animation */
 #logoSplash img{
-width:220px;
-animation:logoIntro 2.5s ease;
-filter:drop-shadow(0 0 25px rgba(0,255,170,.4));
+width:200px;
+animation:logoCinematic 3s ease;
+filter:drop-shadow(0 0 35px rgba(0,255,170,.5));
 }
 
 /* University Text */
 .splashText{
 color:white;
-margin-top:20px;
-letter-spacing:4px;
-font-size:20px;
+margin-top:25px;
+letter-spacing:5px;
+font-size:22px;
 opacity:0;
-animation:textFade 2s ease 1.5s forwards;
+animation:textFade 2s ease 2s forwards;
 }
 
-/* Loader Bar */
-.loader{
-width:200px;
-height:4px;
-background:rgba(255,255,255,.15);
+/* Loader Ring */
+.loaderRing{
+width:70px;
+height:70px;
+border:3px solid rgba(255,255,255,.1);
+border-top:3px solid #00ffb3;
+border-radius:50%;
 margin-top:30px;
-overflow:hidden;
-border-radius:5px;
+animation:spin 1s linear infinite;
 }
 
-.loader span{
-display:block;
-height:100%;
-width:0%;
-background:linear-gradient(90deg,#00ffa6,#00c27a);
-animation:loading 4s linear forwards;
+/* Floating Glow Particles */
+.particle{
+position:absolute;
+width:4px;
+height:4px;
+background:#00ffb3;
+border-radius:50%;
+opacity:.6;
+animation:float 6s infinite ease-in-out;
 }
 
 /* Animations */
-@keyframes logoIntro{
-0%{opacity:0; transform:scale(.6) rotate(-10deg);}
-60%{opacity:1; transform:scale(1.1) rotate(3deg);}
+@keyframes bgMove{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
+}
+
+@keyframes logoCinematic{
+0%{opacity:0; transform:scale(.5) rotate(-20deg);}
+50%{opacity:1; transform:scale(1.1) rotate(3deg);}
 100%{transform:scale(1) rotate(0);}
 }
 
@@ -104,8 +120,14 @@ animation:loading 4s linear forwards;
 to{opacity:1;}
 }
 
-@keyframes loading{
-to{width:100%;}
+@keyframes spin{
+to{transform:rotate(360deg);}
+}
+
+@keyframes float{
+0%{transform:translateY(0px)}
+50%{transform:translateY(-30px)}
+100%{transform:translateY(0px)}
 }
 </style>
 
@@ -113,21 +135,25 @@ to{width:100%;}
 
 <body>
 
-<!-- Login Page Background Load -->
+<!-- Login Page Background -->
 <iframe id="loginFrame" src="Final_LMS_DashboardFixed_Full.html"></iframe>
 
-<!-- Premium Splash -->
+<!-- Splash Screen -->
 <div id="logoSplash">
 
 <img src="logo.png">
 
-<div class="splashText">VARS UNIVERSITY LMS</div>
+<div class="splashText">VARS UNIVERSITY DIGITAL CAMPUS</div>
 
-<div class="loader">
-<span></span>
-</div>
+<div class="loaderRing"></div>
 
 </div>
+
+<!-- Particles -->
+<div class="particle" style="top:20%;left:15%;"></div>
+<div class="particle" style="top:70%;left:25%;animation-delay:2s"></div>
+<div class="particle" style="top:40%;left:80%;animation-delay:3s"></div>
+<div class="particle" style="top:80%;left:60%;animation-delay:1s"></div>
 
 <script>
 setTimeout(()=>{
@@ -135,7 +161,7 @@ document.getElementById("logoSplash").style.opacity="0";
 setTimeout(()=>{
 document.getElementById("logoSplash").style.display="none";
 },1500);
-},5000);
+},6000);
 </script>
 
 </body>
