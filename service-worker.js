@@ -4,7 +4,8 @@ self.addEventListener("install", e => {
       return cache.addAll([
         "./",
         "./index.html",
-        "./Final_LMS_DashboardFixed_Full.html"
+        "./Final_LMS_DashboardFixed_Full.html",
+        "./logo.png"
       ]);
     })
   );
