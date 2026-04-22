@@ -2,9 +2,9 @@ self.addEventListener("install", e => {
   e.waitUntil(
     caches.open("vars-app").then(cache => {
       return cache.addAll([
-        "/VARS-University-Online-Education/",
-        "/VARS-University-Online-Education/index.html",
-        "/VARS-University-Online-Education/Final_LMS_DashboardFixed_Full.html"
+        "./",
+        "./index.html",
+        "./Final_LMS_DashboardFixed_Full.html"
       ]);
     })
   );
